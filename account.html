@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+    <title>Expense Calculator Dashboard</title>
+    <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        crossorigin="anonymous">
+    <style>
+        /* Add your CSS styles here */
+        @font-face {
+            font-family: 'Nothing';
+            src: url('../nothing-font.ttf') format('truetype'), url('../nothing-font-5x7.otf') format('opentype');
+        }
+
+        body {
+            background-color: #000000;
+            margin: 0;
+            padding: 0;
+            color: #ffffff;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 20vh;
+            margin-top: 5%;
+        }
+
+        .white-box {
+            background-color: #ffffff;
+            color: #000000;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 50%;
+            width: 80%; /* Adjust the width as needed */
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            font-weight: bold;
+        }
+
+        .form-group input {
+            width: calc(100% - 16px);
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+
+        .form-group input:disabled {
+            background-color: #f9f9f9;
+        }
+
+        #back-Button {
+            position: fixed;
+            top: 10px; /* Adjust the distance from the top as needed */
+            left: 10px; /* Adjust the distance from the left as needed */
+        }
+
+        .save-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .save-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <button id="back-Button">Back</button>
+        <div class="white-box">
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" id="name" pattern="[A-Za-z]+" title="Invalid input. Please enter only letters." disabled required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" title="Invalid email format. Please enter a valid email address." disabled required>
+            </div>
+            <div class="form-group">
+                <label for="phoneNumber">Phone Number</label>
+                <input type="tel" id="phoneNumber" disabled>
+            </div>
+            <button class="save-button" id="saveButton" disabled>Save</button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+
+    <script>
+        var firebaseConfig = {
+            apiKey: "AIzaSyCZfnZbZIKR1zyywjrXJu0MJOjETO35aTE",
+  authDomain: "split-bill-6c19e.firebaseapp.com",
+  databaseURL: "https://split-bill-6c19e-default-rtdb.firebaseio.com",
+  projectId: "split-bill-6c19e",
+  storageBucket: "split-bill-6c19e.appspot.com",
+  messagingSenderId: "297198677510",
+  appId: "1:297198677510:web:9cec9889c3224da9735d87"
+};
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+// Initialize userId variable in a higher scope
+let userId = null;
+
+// Check if the user is signed in
+firebase.auth().onAuthStateChanged(async function (user) {
+    if (user) {
+        userId = user.uid; // Make sure this line is executed properly
+        console.log('User ID:', userId); // Log the user ID to debug
+
+        if (userId) {
+            // User is signed in
+            // Retrieve user data from the database using userId
+            const userRef = database.ref(`users/${userId}`);
+            userRef.on("value", (snapshot) => {
+                const user = snapshot.val();
+                console.log(user); // Log the retrieved user data
+                // Rest of your logic to update the form fields...
+            });
+        } else {
+            console.error('User ID is null.');
+        }
+    } else {
+        // Redirect to login if the user is not signed in
+        window.location.href = '../loginv3.html';
+    }
+
+
+
+    const userRef = database.ref(`users/${userId}`);
+    userRef.on("value", (snapshot) => {
+        const user = snapshot.val();
+        const nameField = document.getElementById("name");
+        const emailField = document.getElementById("email");
+        const phoneNumberField = document.getElementById("phoneNumber");
+        const saveButton = document.getElementById("saveButton");
+
+        if (user && user.details) {
+    nameField.value = user.details.name || "";
+    emailField.value = user.details.email || "";
+    phoneNumberField.value = user.details.phoneNumber || "";
+
+    // Check if fields have data and disable accordingly
+    nameField.disabled = !!(user.details.name);
+    emailField.disabled = !!(user.details.email);
+    phoneNumberField.disabled = !!(user.details.phoneNumber);
+    
+    // Disable the save button if all fields are disabled
+    saveButton.disabled = nameField.disabled && emailField.disabled && phoneNumberField.disabled;
+} else {
+    // Enable all fields if there is no user data
+    nameField.disabled = false;
+    emailField.disabled = false;
+    phoneNumberField.disabled = false;
+    saveButton.disabled = false;
+}
+    });
+
+    document.getElementById("saveButton").addEventListener("click", () => {
+        const name = document.getElementById("name").value;
+        const email = document.getElementById("email").value;
+        const phoneNumber = document.getElementById("phoneNumber").value;
+
+            // Regular expression patterns for validation
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    const namePattern = /^[A-Za-z]+$/;
+    const phoneNumberPattern = /^\d{10}$/;
+
+    // Check if the input values match the patterns
+    if (!name.match(namePattern)) {
+        alert("Invalid name format. Please enter only letters.");
+        return;
+    }
+
+    if (!email.match(emailPattern)) {
+        alert("Invalid email format. Please enter a valid email address.");
+        return;
+    }
+
+        // Get the current details object
+        const currentDetails = userRef.child("details");
+
+        // Update the specific fields you want to change
+        currentDetails.update({
+            name: name,
+            email: email,
+            phoneNumber: phoneNumber
+        });
+
+        // Disable the form fields and save button
+        document.getElementById("name").disabled = true;
+        document.getElementById("email").disabled = true;
+        document.getElementById("phoneNumber").disabled = true;
+        document.getElementById("saveButton").disabled = true;
+    });
+
+    document.getElementById("back-Button").addEventListener("click", () => {
+        window.history.back();
+    });
+});
+    </script>
+</body>
+
+</html>

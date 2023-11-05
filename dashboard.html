@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <link rel="stylesheet" type="text/css" href="./stylesv1.css"> 
+    <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" crossorigin="anonymous">
+    <title>Expense Calculator Dashboard</title>
+</head>
+<body>
+    
+    <div class="container">
+ <span id="user-id"></span>
+
+        <header>
+            <div><span style="color: white; font-size: 16px; font-family: Nothing Font (5x7); font-weight: 400; word-wrap: break-word">Ku</span><span style="color: #EEFF00; font-size: 16px; font-family: Nothing Font (5x7); font-weight: 400; word-wrap: break-word">DicK</span><span style="color: white; font-size: 16px; font-family: Nothing Font (5x7); font-weight: 400; word-wrap: break-word">Ka</span></div>            <button id="logoutButton1">Logout </button>
+            <div id="success-message" class="message" style="display: none;"></div>
+        </header>
+        <br>
+        <br>
+        <br>
+        <section class="kpi-container">
+            <div class="kpi-box expense" id="expense-section" style="display: none;">
+                <h3> Expense</h3>
+                <p id="expense-amount" class="currency-inr">₹ 0.00</p>
+            </div>
+            
+            <div class="kpi-box income" id="income-section" style="display: none;">
+                <h3> Income</h3>
+                <p id="income-amount" class="currency-inr">₹ 0.00</p>
+            </div>
+            
+            <div class="kpi-box balance" id="balance-section">
+                <h3> Balance</h3>
+                <p id="balance-amount" class="currency-inr">₹ 0.00</p>
+    
+<button class="arrow-button" id="balance-button">
+    <svg viewBox="0 0 320 512" height="1em" xmlns="http://www.w3.org/2000/svg" class="chevron-right">
+    <path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path>
+</svg>
+</button>
+<button class="arrow-button" id="expense-button">
+<svg viewBox="0 0 320 512" height="1em" xmlns="http://www.w3.org/2000/svg" class="chevron-right">
+    <path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path>
+</svg>
+</button>
+<button class="arrow-button" id="income-button">
+<svg viewBox="0 0 320 512" height="1em" xmlns="http://www.w3.org/2000/svg" class="chevron-right">
+    <path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path>
+</svg>
+</button> 
+
+  </div>
+            </div>            
+            </div>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+        </section>
+        <section class="history">
+            <h3>Latest transactions:</h3>
+            <div class="history-entries-container" id="history-entries-container">
+                <div id="history-table-body"></div>
+
+                <!-- Transaction entries will be dynamically added here -->
+            </div>
+        </section>
+    </div>
+    
+
+    <!-- Navbar codes -->
+
+    <div class="navbar">
+        <a href="#home" class="nav-item"><i class="fas fa-home"></i><span>Home</span></a>
+        <a href="/dashboard/dashboardv1.html" class="nav-item"><i class="fas fa-exchange-alt"></i><span>Transaction</span></a>
+        <div class="nav-item nav-center">
+            <a href="/dashboard/add.html" class="nav-center-btn"><i class="fas fa-plus"></i></a>
+        </div>
+        <a href="/dashboard/story1.html" class="nav-item"><i class="fas fa-chart-pie"></i><span>Report</span></a>
+        <a href="./profile.html" class="nav-item"><i class="fas fa-user"></i><span>Profile</span></a>
+    </div>
+    
+
+
+    <!-- Button to open the add expense/income popup
+    <div class="add-button" id="addButton">
+        <div class="add-button-text" >+ Add expense/income</div>
+</div>
+<a href="app://app.tsx?userId=${userId}">Auto Add</a> -->
+<!-- 
+    <div class="popup" id="popup">
+        <div class="popup-content">
+            <span class="close-button" id="close-popup">&times;</span>
+            <h2 class="popup-title" id="popup-title">Add Expense / Income 🙂</h2>
+            <div class="slide-toggle">
+                <button id="toggle-expense" class="toggle-button-1">Expense</button>
+                <button id="toggle-income" class="toggle-button-2">Income</button>                                          
+            </div>
+            <form id="popup-form">
+                <div class="form-group">
+                    <label for="amount">Amount (INR):</label>
+                    <input type="number" id="amount" name="amount" min="0.01" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="date">Date:</label>
+                    <input type="date" id="date" name="date" required>
+                </div>
+                <div class="form-group">
+                    <label for="category">Category:</label>
+                    <select id="category" name="category">
+                        <option value="food">Food</option>
+                        <option value="grocery">Grocery</option>
+                        <option value="transport">Transport</option>
+                        <option value="utilities">Utilities</option>
+                        <option value="others">Others</option>
+                        <option value="others">Salary</option>
+                        <option value="others">Bonus</option>
+
+
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="account">Account:</label>
+                    <select id="account" name="account">
+                        <option value="cash">Cash</option>
+                        <option value="bank">Bank - Paytm</option>
+                        <option value="bank">Bank - Fi</option>
+                        <option value="credit">Credit Card</option>
+                        <option value="wallet">Digital Wallet</option>
+                        <option value="wallet">Savings</option>
+                    </select>
+                </div>
+                <button type="submit" id="add-button">Add</button>
+                <div id="add-message"></div>
+            </form>
+        </div>
+    </div> -->
+<!-- Logout Confirmation Popup -->
+<div class="popup" id="logoutPopup">
+    <div class="popup-content1">
+        <div class="popup-title2">Do you want to logout?</div>
+        <div><span style="color: white; font-size: 10px; font-family: Montserrat; font-weight: 600; word-wrap: break-word">This will log you out from </span><span style="color: white; font-size: 10px; font-family: Montserrat; font-weight: 500; word-wrap: break-word"> </span><span style="color: white; font-size: 10px; font-family: Nothing Font (5x7); font-weight: 400; word-wrap: break-word">Ku</span><span style="color: #EEFF00; font-size: 10px; font-family: Nothing Font (5x7); font-weight: 400; word-wrap: break-word">DicK</span><span style="color: white; font-size: 10px; font-family: Nothing Font (5x7); font-weight: 400; word-wrap: break-word">Ka</span></div>        <div class="popup-buttons">
+            <br>
+            <button id="cancelButton">Cancel</button>
+            <button id="confirmButton">Confirm</button>
+        </div>
+    </div>
+</div>
+
+</body>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+    // Define the transactions variable at a higher scope
+const transactions = [];
+
+// Initialize Firebase (if not already initialized)
+var firebaseConfig = {
+    apiKey: "AIzaSyCZfnZbZIKR1zyywjrXJu0MJOjETO35aTE",
+  authDomain: "split-bill-6c19e.firebaseapp.com",
+  databaseURL: "https://split-bill-6c19e-default-rtdb.firebaseio.com",
+  projectId: "split-bill-6c19e",
+  storageBucket: "split-bill-6c19e.appspot.com",
+  messagingSenderId: "297198677510",
+  appId: "1:297198677510:web:9cec9889c3224da9735d87"
+};
+    firebase.initializeApp(firebaseConfig);
+
+    // Initialize userId variable in a higher scope
+let userId = null;
+
+    // Check if the user is signed in
+    firebase.auth().onAuthStateChanged(function (user) {
+    if (user) {
+        userId = user.uid; // Make sure this line is executed properly
+        console.log('User ID:', userId); // Log the user ID to debug
+
+        if (userId) {
+            // Display transactions when the user is signed in
+            displayTransactions(userId);
+// Get the last 4 characters of the user ID
+const truncatedUserId = userId.slice(-4);
+
+// Display the last 4 digits of the user ID
+document.getElementById('user-id').textContent = ` ${truncatedUserId}`;
+        } else {
+            // console.error('User ID is null.');
+        }
+    } else {
+        // Redirect to login if the user is not signed in
+        window.location.href = '../loginv3.html';
+    }
+});
+
+
+
+function displayTransactions(userId) {
+    const userRef = firebase.database().ref('users/' + userId);
+    const historyTableBody = document.getElementById('history-table-body');
+    let totalExpense = 0;
+    let totalIncome = 0;
+
+    userRef.child('income').on('child_added', function (incomeChildSnapshot) {
+        var incomeData = incomeChildSnapshot.val();
+        incomeData.date = new Date(incomeData.date);
+        incomeData.type = 'Income';
+        addTransactionRow(incomeData);
+        totalIncome += incomeData.amount;
+        updateKPIs(totalIncome, totalExpense);
+    });
+
+    userRef.child('expenses').on('child_added', function (expenseChildSnapshot) {
+        var expenseData = expenseChildSnapshot.val();
+        expenseData.date = new Date(expenseData.date);
+        expenseData.type = 'Expense';
+        addTransactionRow(expenseData);
+        totalExpense += expenseData.amount;
+        updateKPIs(totalIncome, totalExpense);
+    });
+
+    function addTransactionRow(data) {
+    var historyEntry = document.createElement('div');
+    historyEntry.className = 'history-entry ' + data.type.toLowerCase();
+    var amount = data.type.toLowerCase() === 'expense' ? -data.amount : data.amount;
+
+     // Determine the sign and color based on the transaction type
+     var sign = data.type.toLowerCase() === 'income' ? '+' : '-'; 
+    var color = data.type.toLowerCase() === 'income' ? 'green' : 'red';
+
+    historyEntry.innerHTML = `
+        <div class="icon ${data.type.toLowerCase()}"></div>
+        <div class="details">
+            <div class="category">${data.category}</div>
+            <div class="date">${formatDate(data.date)}</div>
+        </div>
+        <div class="amount currency-inr" style="color: ${color};">${sign} ${Math.abs(amount).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
+    `;
+    // Insert the new transaction row at the beginning of the history table
+    historyTableBody.insertBefore(historyEntry, historyTableBody.firstChild);
+}
+
+    
+    // Function to update KPIs
+function updateKPIs(totalIncome, totalExpense) {
+
+
+
+    // Calculate and update the balance
+    const balance = totalIncome - Math.abs(totalExpense);
+    // console.log('Calculated Balance:', balance);
+
+    // Update the balance element with the calculated balance
+    const balanceElement = document.getElementById('balance-amount');
+    balanceElement.textContent = `₹ ${balance.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+
+     // Update the expense element with the total expense
+     const expenseElement = document.getElementById('expense-amount');
+    expenseElement.textContent = `₹ ${Math.abs(totalExpense).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+
+         // Update the expense element with the total income
+         const incomeElement = document.getElementById('income-amount');
+    incomeElement.textContent = `₹ ${Math.abs(totalIncome).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+
+    
+    // Log the totals after updating the KPIs
+    // console.log('Updated Total Income:', totalIncome, 'Updated Total Expense:', totalExpense);
+    // console.log('Calculated Balance:', balance);
+    } 
+    function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            const formattedDate = new Date(dateString).toLocaleDateString('en-US', options);
+            return formattedDate;
+        }
+}
+
+//arrow button
+// Define the toggleSections function
+function toggleSections(sectionId) {
+    var sections = ['balance-section', 'expense-section', 'income-section'];
+    for (var i = 0; i < sections.length; i++) {
+        var section = document.getElementById(sections[i]);
+        console.log('Section ID:', sections[i]); // Log section ID
+        console.log('Section Element:', section); // Log section element
+        if (sections[i] === sectionId) {
+            section.style.display = 'block';
+        } else {
+            section.style.display = 'none';
+        }
+    }
+}
+// Attach the click event handlers to your buttons
+document.getElementById('balance-button').addEventListener('click', function() {
+    toggleSections('balance-section');
+});
+
+document.getElementById('expense-button').addEventListener('click', function() {
+    toggleSections('expense-section');
+});
+
+document.getElementById('income-button').addEventListener('click', function() {
+    toggleSections('income-section');
+});
+
+
+
+
+
+// Call the displayTransactions function to populate the transaction history
+displayTransactions(userId);
+
+
+// // Function to add a row to the transaction history
+// function addTransactionRow(type, data) {
+//     var historyEntriesContainer = document.querySelector('.history-entries-container');
+//     var historyEntry = document.createElement('div');
+//     historyEntry.className = 'history-entry';
+//     var amount = type.toLowerCase() === 'expense' ? -data.amount : data.amount; // Adjust amount for expenses
+    
+//     historyEntry.innerHTML = `
+//         <div class="icon ${type.toLowerCase()}"></div>
+//         <div class="details">
+//             <div class="category">${data.category}</div>
+//             <div class="date">${data.date}</div>
+//         </div>
+//         <div class="amount currency-inr">₹ ${Math.abs(amount).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
+//     `;
+//     var historyTableBody = document.getElementById('history-table-body');
+
+//     historyEntriesContainer.appendChild(historyEntry);
+// }
+
+// Call the displayTransactions function to populate the transaction history
+displayTransactions(userId);
+
+// Get the logout button and the popup elements
+const logoutButton = document.getElementById('logoutButton1'); // Updated ID
+const logoutPopup = document.getElementById('logoutPopup');
+const cancelButton = document.getElementById('cancelButton');
+const confirmButton = document.getElementById('confirmButton');
+
+// Add click event listener to the logout button
+logoutButton.addEventListener('click', function() {
+    logoutPopup.style.display = 'flex'; // Show the popup
+});
+
+// Add click event listeners to the popup buttons
+cancelButton.addEventListener('click', function() {
+    logoutPopup.style.display = 'none'; // Hide the popup on cancel
+});
+
+confirmButton.addEventListener('click', function() {
+    logout(); // Call the logout function on confirm
+    logoutPopup.style.display = 'none'; // Hide the popup after logout
+});
+    // Function to log out the user
+    function logout() {
+        try {
+            firebase.auth().signOut().then(function() {
+                // Sign-out successful, redirect to the login page
+                window.location.href = '../loginv3.html';
+            }).catch(function(error) {
+                // Handle sign-out error
+                console.error('Logout error:', error);
+            });
+        } catch (error) {
+            console.error('Logout error (try-catch):', error);
+        }
+    }
+
+// Function to handle the click event of the "+" sign
+const addButton = document.getElementById('addButton');
+    // Show the popup when the "+" sign is clicked
+    addButton.addEventListener('click', function() {
+        window.location.href = './add.html';
+
+});
+
+
+
+// Function to handle the click event of the toggle buttons
+document.getElementById('toggle-expense').addEventListener('click', function() {
+    // Remove "active" class from income button
+    document.getElementById('toggle-income').classList.remove('active');
+    // Add "active" class to expense button
+    this.classList.add('active');
+    // Update the popup title
+    document.getElementById('popup-title').textContent = 'Add Expense 😭';
+});
+
+document.getElementById('toggle-income').addEventListener('click', function() {
+    // Remove "active" class from expense button
+    document.getElementById('toggle-expense').classList.remove('active');
+    // Add "active" class to income button
+    this.classList.add('active');
+    // Update the popup title
+    document.getElementById('popup-title').textContent = 'Add Income 😍';
+});
+
+// Function to refresh the page
+function refreshPage() {
+    location.reload();
+}
+
+// // Function to handle form submission and store data in the database
+// document.getElementById('popup-form').addEventListener('submit', function(event) {
+//     event.preventDefault(); // Prevent the form from submitting traditionally
+
+//     // Get the form values
+//     const amount = parseFloat(document.getElementById('amount').value);
+//     const date = document.getElementById('date').value;
+//     const category = document.getElementById('category').value;
+//     const account = document.getElementById('account').value;
+
+//     // Determine whether it's an income or expense based on the selected toggle button
+//     const isExpense = document.getElementById('toggle-expense').classList.contains('active');
+//     const isIncome = document.getElementById('toggle-income').classList.contains('active');
+
+//     // Create a reference to the user's data in the database (replace 'userId' with the actual user ID)
+//     const userId = firebase.auth().currentUser.uid;
+
+//     // Create a new transaction object with a timestamp
+//     const transaction = {
+//         amount: isExpense ? -amount : amount,
+//         date: date,
+//         category: category,
+//         account: account, // Add a comma here
+//         timestamp: firebase.database.ServerValue.TIMESTAMP
+//     };
+//     // Choose the appropriate database reference based on the transaction type
+//     const transactionTypeRef = isExpense ? 'expenses' : 'income';
+
+//     // Create a reference to the user's expenses or income node and push the new transaction
+//     const userTransactionRef = firebase.database().ref('users/' + userId + '/' + transactionTypeRef);
+//     userTransactionRef.push(transaction, function(error) {
+//         if (error) {
+//             console.error('Error adding transaction:', error);
+//         } else {
+//             // Clear the form and hide the popup on success
+//             document.getElementById('popup-form').reset();
+//             document.getElementById('popup').style.display = 'none';
+//             // Show success message
+//             document.getElementById('success-message').style.display = 'block';
+//             setTimeout(function() {
+//                 // Hide success message after a delay
+//                 document.getElementById('success-message').style.display = 'none';
+//                 // Refresh the page
+//                 location.reload();
+//             }, 1000);
+//         }
+//     });
+// });
+
+// // Function to handle the click event of the close button
+// document.getElementById('close-popup').addEventListener('click', function() {
+//     // Hide the popup when the close button is clicked
+//     document.getElementById('popup').style.display = 'none';
+// });
+// });
+
+// Disable zooming on the entire document
+document.addEventListener('gesturestart', function (e) {
+    e.preventDefault();
+});
+
+// Prevent pinch-to-zoom and double-tap gestures
+document.addEventListener('touchmove', function(event) {
+    if(event.scale !== 1) {
+        event.preventDefault();
+    }
+}, { passive: false });
+
+// Alternative method to prevent pinch-to-zoom on older Android devices
+document.addEventListener('touchstart', function(event) {
+    if(event.touches.length > 1) {
+        event.preventDefault();
+    }
+}, { passive: false });
+
+
+// Get the button element by its id
+const hapticButton = document.getElementById('addButton');
+
+// Function to trigger haptic feedback
+function triggerHapticFeedback() {
+    // Check if the 'vibrate' method is supported by the browser
+    if (navigator.vibrate) {
+        // Vibrate for 100 milliseconds
+        navigator.vibrate(100);
+    } else {
+        // Fallback for browsers that do not support haptic feedback
+        console.log("Haptic feedback is not supported on this device.");
+    }
+}
+
+// Add click event listener to the button and trigger haptic feedback
+hapticButton.addEventListener('click', triggerHapticFeedback);
+
+    // Get the current URL
+    const currentURL = window.location.href;
+
+    // Get the navigation items (anchor tags) and their child icons
+    const navItems = document.querySelectorAll('.navbar .nav-item');
+    
+    // Loop through each nav item and check if the URL matches
+    navItems.forEach(item => {
+        const link = item.getAttribute('href');
+        const icon = item.querySelector('i');
+        if (currentURL.includes(link)) {
+            item.classList.add('active'); // Highlight the nav item
+            icon.classList.add('active'); // Highlight the icon
+        }
+    });
+});
+
+
+</script>
+</html>

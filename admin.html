@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Admin Dashboard</title>
+    <!-- Firebase JavaScript SDK -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+
+    <style>
+        body {
+            font-family: 'Integral CF', sans-serif;
+            background-color: #222; /* Dark background color */
+            color: #fff;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        header {
+            background-color: #111;
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            font-size: 14px;
+            border-bottom: 1px solid #444;
+        }
+
+        th {
+            background-color: #333;
+        }
+
+        .add-quotation {
+            margin-top: 30px;
+        }
+
+        .add-quotation input[type="text"] {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 8px;
+            font-size: 14px;
+        }
+
+        .add-quotation button {
+            width: 100%;
+            background-color: #b3ff00;
+            color: #000000;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .add-quotation button:hover {
+            background-color: #b3ff00;
+        }
+
+        section {
+            margin-bottom: 30px;
+        }
+
+        section h2 {
+            background-color: #333;
+            padding: 10px;
+            margin: 0;
+            color: #fff;
+        }
+
+        /* Mobile-first responsive design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            table {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <h1>Admin Dashboard</h1>
+        </div>
+    </header>
+
+    <div class="container">
+<section class="user-list">
+    <h2>User List</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>User Id</th>
+                <th>User Name</th>
+                <th>Phone Number</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="user-list-table-body">
+            <!-- User list content will be populated dynamically -->
+        </tbody>
+    </table>
+</section>
+
+<section class="login-logs">
+    <h2>Login Logs</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Phone Number</th>
+                <th>UID</th>
+            </tr>
+        </thead>
+        <tbody id="login-logs-table-body">
+            <!-- Login logs content will be populated dynamically -->
+        </tbody>
+    </table>
+</section>
+
+        
+        <div class="add-quotation">
+            <h2>Add Quotation</h2>
+            <form id="quotation-form">
+                <label for="quote">Quote:</label>
+                <input type="text" id="quote" name="quote" required><br>
+
+                <label for="quoted-by">Quoted By:</label>
+                <input type="text" id="quoted-by" name="quoted-by" required><br>
+
+                <button type="submit">Add Quotation</button>
+            </form>
+        </div>
+
+        <section class="quotations">
+            <h2>Quotations</h2>
+            <table id="quotations-table">
+                <thead>
+                    <tr>
+                        <th>Quote</th>
+                        <th>Quoted By</th>
+                    </tr>
+                </thead>
+                <!-- Quotations content will be populated dynamically -->
+            </table>
+        </section>
+    </div>
+    
+    <script>
+        // Function to format timestamp as date and time in separate lines
+function formatTimestamp(timestamp) {
+    const date = new Date(timestamp);
+    const formattedDate = date.toDateString(); // Get formatted date (e.g., Mon Sep 24 2023)
+    const formattedTime = date.toLocaleTimeString(); // Get formatted time (e.g., 16:33:59)
+    return `${formattedDate}<br>${formattedTime}`; // Return date and time in separate lines
+}
+
+        document.addEventListener("DOMContentLoaded", function() {
+
+        // Initialize Firebase (if not already initialized)
+        var firebaseConfig = {
+            apiKey: "AIzaSyCZfnZbZIKR1zyywjrXJu0MJOjETO35aTE",
+  authDomain: "split-bill-6c19e.firebaseapp.com",
+  databaseURL: "https://split-bill-6c19e-default-rtdb.firebaseio.com",
+  projectId: "split-bill-6c19e",
+  storageBucket: "split-bill-6c19e.appspot.com",
+  messagingSenderId: "297198677510",
+  appId: "1:297198677510:web:9cec9889c3224da9735d87"
+};
+        firebase.initializeApp(firebaseConfig);
+
+// Check if a user is logged in
+firebase.auth().onAuthStateChanged(function(user) {
+    if (user) {
+        // User is signed in, so you can access their phone number
+        var phoneNumber = user.phoneNumber;
+    } else {
+        // No user is signed in, redirect to the login page
+        window.location.href = '../v1login.html'; // Redirect to the login page
+    }
+});
+
+// Function to fetch and display user list
+function displayUserList() {
+    var userListRef = firebase.database().ref('users');
+    var userListTableBody = document.getElementById('user-list-table-body');
+
+    userListRef.on('value', function(snapshot) {
+        userListTableBody.innerHTML = ''; // Clear the table body content before populating
+
+        snapshot.forEach(function(userSnapshot) {
+            var userId = userSnapshot.key;
+            var userDetails = userSnapshot.val().details;
+            var name = userDetails.name;
+            var phoneNumber = userDetails.phoneNumber;
+
+            // Extract last 5 digits from the user ID
+            var lastFiveDigits = userId.slice(-5);
+
+            var row = userListTableBody.insertRow();
+            var userIdCell = row.insertCell(0);
+            var nameCell = row.insertCell(1);
+            var phoneNumberCell = row.insertCell(2);
+            var viewUserCell = row.insertCell(3);
+
+            userIdCell.textContent = lastFiveDigits; // Display the last 5 digits of user ID
+            nameCell.textContent = name;
+            phoneNumberCell.textContent = phoneNumber;
+
+            // Create a link to the user's page
+            var userLink = document.createElement('a');
+            userLink.href = 'user_profile.html?userId=' + userId;
+            userLink.textContent = 'View User';
+            viewUserCell.appendChild(userLink);
+        });
+    });
+}
+
+
+// Function to fetch and display login logs
+    // Function to fetch and display login logs
+    function displayLoginLogs() {
+        var loginLogsRef = firebase.database().ref('login-logs');
+        var loginLogsTableBody = document.getElementById('login-logs-table-body');
+
+        loginLogsRef.on('value', function(snapshot) {
+            loginLogsTableBody.innerHTML = ''; // Clear the table body content before populating
+
+            snapshot.forEach(function(childSnapshot) {
+                var logEntry = childSnapshot.val();
+                console.log('Log Entry:', logEntry); // Log the data to the console
+
+                var row = loginLogsTableBody.insertRow();
+                var timestampCell = row.insertCell(0);
+                var phoneNumberCell = row.insertCell(1);
+                var uidCell = row.insertCell(2);
+
+                // Format and set content for each cell using the formatTimestamp function
+                timestampCell.innerHTML = formatTimestamp(logEntry.timestamp); // Use innerHTML to render line breaks
+                phoneNumberCell.textContent = logEntry.phoneNumber;
+
+                // Check if logEntry.uid is defined before slicing it
+                if (logEntry.uid) {
+                    uidCell.textContent = logEntry.uid.slice(-5); // Display only the last 5 digits of uid
+                } else {
+                    uidCell.textContent = "N/A"; // or any default value if uid is undefined
+                }
+
+                // Allow text wrapping for all cells
+                phoneNumberCell.style.whiteSpace = 'normal';
+                uidCell.style.whiteSpace = 'normal';
+            });
+        });
+    }
+
+
+
+       // Reference to the quotations table in the Firebase database
+       var quotationsRef = firebase.database().ref('quotations');
+
+// Form submission event listener
+document.getElementById('quotation-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    // Get quote and quoted-by values from the form
+    var quote = document.getElementById('quote').value;
+    var quotedBy = document.getElementById('quoted-by').value;
+
+    // Push new quotation data to the Firebase database
+    quotationsRef.push({
+        quote: quote,
+        quotedBy: quotedBy
+    });
+
+    // Clear the form fields after submission
+    document.getElementById('quote').value = '';
+    document.getElementById('quoted-by').value = '';
+});
+
+// Function to display quotations
+function displayQuotations() {
+    var quotationsList = document.getElementById('quotations-table');
+
+    // Fetch and display quotations from the Firebase database
+    quotationsRef.on('value', function(snapshot) {
+        quotationsList.innerHTML = '';
+
+        snapshot.forEach(function(childSnapshot) {
+            var quotation = childSnapshot.val();
+            var row = quotationsList.insertRow();
+            var quoteCell = row.insertCell(0);
+            var quotedByCell = row.insertCell(1);
+
+            quoteCell.textContent = quotation.quote;
+            quotedByCell.textContent = quotation.quotedBy;
+        });
+    });
+}
+// Call functions to initially load data
+displayUserList();
+displayLoginLogs();
+displayQuotations();
+    });
+</script>
+</body>
+</html>

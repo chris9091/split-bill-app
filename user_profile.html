@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>User Profile</title>
+    <style>
+        @font-face {
+  font-family: 'Nothing';
+  src: url('https://kudickka.online/nothing-font.ttf') format('truetype'),
+  url('https://kudickka.online/nothing-font.otf') format('opentype'),
+}
+        body {
+            font-family: 'Nothing', sans-serif;
+            background-color: #000000;
+            color: #ffffff;
+        }
+
+        header {
+            background-color: #000000;
+            color: #EEFF00;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .kpi-box {
+            background-color: #333333;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #EEFF00;
+        }
+
+        th {
+            background-color: #000000;
+            color: #EEFF00;
+        }
+
+        .delete-button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+
+        .delete-button:hover {
+            background-color: #ff6666;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>User Profile</h1>
+    </header>
+
+    <div class="content">
+        <section id="user-profile">
+            <h2>User ID: <span id="short-user-id"></span></h2>
+            <div class="kpi-box" id="balance-kpi">
+                <h3>Balance</h3>
+                <span id="balance">N/A</span>
+            </div>
+            <div class="kpi-box green" id="income-kpi">
+                <h3>Income</h3>
+                <span id="income">0</span>
+            </div>
+
+            <div class="kpi-box red" id="expense-kpi">
+                <h3>Expense (Total)</h3>
+                <span id="total-expense">0</span>
+            </div>
+
+
+
+            <h3>Transactions</h3>
+            <table id="transactions-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Amount</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="transactions-data"></tbody>
+            </table>
+        </section>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script>
+        var firebaseConfig = {
+            apiKey: "AIzaSyCZfnZbZIKR1zyywjrXJu0MJOjETO35aTE",
+  authDomain: "split-bill-6c19e.firebaseapp.com",
+  databaseURL: "https://split-bill-6c19e-default-rtdb.firebaseio.com",
+  projectId: "split-bill-6c19e",
+  storageBucket: "split-bill-6c19e.appspot.com",
+  messagingSenderId: "297198677510",
+  appId: "1:297198677510:web:9cec9889c3224da9735d87"
+};
+        firebase.initializeApp(firebaseConfig);
+
+// Check if a user is logged in
+firebase.auth().onAuthStateChanged(function(user) {
+    if (user) {
+        // User is signed in, so you can access their phone number
+        var phoneNumber = user.phoneNumber;
+    } else {
+        // No user is signed in, redirect to the login page
+        window.location.href = '../v1login.html'; // Redirect to the login page
+    }
+});
+
+
+        var userId = window.location.search.split('=')[1];
+        var shortUserId = userId.slice(-5);
+        document.getElementById('short-user-id').textContent = shortUserId;
+
+        firebase.database().ref('users/' + userId).on('value', function(snapshot) {
+            var userData = snapshot.val();
+            var incomeData = userData.income || {};
+            var expensesData = userData.expenses || {};
+
+    // Calculate total income and expenses
+    var totalIncome = calculateTotal(incomeData);
+    var totalExpenses = calculateTotal(expensesData);
+
+    // Displaying KPIs
+    document.getElementById('balance').textContent = totalIncome.toFixed(2) - (-totalExpenses.toFixed(2));
+    document.getElementById('income').textContent = totalIncome.toFixed(2); // Round to 2 decimal places
+    document.getElementById('total-expense').textContent = totalExpenses.toFixed(2); // Round to 2 decimal places
+
+    displayTableData('transactions-data', incomeData, expensesData);
+
+        });
+
+        function calculateTotal(data) {
+    var total = 0;
+    Object.keys(data).forEach(function(key) {
+        total += data[key].amount;
+    });
+    return total;
+}
+
+        function displayTableData(tableId, incomeData, expensesData) {
+            var table = document.getElementById(tableId);
+            table.innerHTML = '';
+
+            // Display income data in green
+            Object.keys(incomeData).forEach(function (key) {
+                var row = table.insertRow();
+                var categoryCell = row.insertCell(0);
+                var amountCell = row.insertCell(1);
+                var actionCell = row.insertCell(2);
+
+                categoryCell.textContent = incomeData[key].category;
+                amountCell.textContent = incomeData[key].amount;
+                amountCell.style.color = '#00FF00'; // Set text color to green for income
+
+                var deleteButton = createDeleteButton(userId, 'income', key);
+                actionCell.appendChild(deleteButton);
+            });
+
+            // Display expenses data in red
+            Object.keys(expensesData).forEach(function (key) {
+                var row = table.insertRow();
+                var categoryCell = row.insertCell(0);
+                var amountCell = row.insertCell(1);
+                var actionCell = row.insertCell(2);
+
+                categoryCell.textContent = expensesData[key].category;
+                amountCell.textContent = expensesData[key].amount;
+                amountCell.style.color = '#FF0000'; // Set text color to red for expenses
+
+                var deleteButton = createDeleteButton(userId, 'expenses', key);
+                actionCell.appendChild(deleteButton);
+            });
+        }
+
+        function createDeleteButton(userId, type, transactionId) {
+            var deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Delete';
+            deleteButton.className = 'delete-button';
+            deleteButton.onclick = function () {
+                if (confirm('Are you sure you want to delete this transaction?')) {
+                    deleteTransaction(userId, type, transactionId);
+                }
+            };
+            return deleteButton;
+        }
+
+        function deleteTransaction(userId, type, transactionId) {
+    var transactionRef = firebase.database().ref('users/' + userId + '/' + type + '/' + transactionId);
+    transactionRef.remove()
+        .then(function() {
+            console.log('Transaction removed successfully.');
+        })
+        .catch(function(error) {
+            console.error('Error removing transaction: ', error);
+        });
+}
+
+    </script>
+</body>
+
+</html>

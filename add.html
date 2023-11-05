@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+    <title>Date and Time Picker</title>
+    <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <link rel="stylesheet" type="text/css" href="/dashboard/add.css">
+</head>
+
+<body>
+    
+    <div class="black-box">
+        <div class="toggle-container">
+                <!-- Back button with arrow icon and colored box -->
+    <div class="back-button">
+        <button id="backButton">&lt;</button>
+        <div class="box"></div>
+    </div>
+            <script>
+                document.getElementById('backButton').addEventListener('click', function() {
+                    window.history.back();
+                });
+            </script>
+                        <span class="text">Income</span>
+            <label>
+                <input class="toggle-checkbox" type="checkbox">
+                <div class="toggle-slot">
+                    <div class="sun-icon-wrapper">
+                        <div class="iconify sun-icon" data-icon="feather-sun" data-inline="false"></div>
+                    </div>
+                    <div class="toggle-button"></div>
+                    <div class="moon-icon-wrapper">
+                        <div class="iconify moon-icon" data-icon="feather-moon" data-inline="false"></div>
+                    </div>
+                </div>
+            </label>
+            <span class="text">Expense</span>
+        </div>
+        <div class="ppo-popup" id="ppo-success-popup">
+            Transaction Successful!
+        </div>
+        <div id="error-popup" class="ppo-popup1">
+            <div id="error-text"></div>
+        </div>
+        
+        
+        <div class="date-time-picker" id="date-picker"></div>
+        <div class="time-picker" id="time-picker"></div>
+        <div class="currency">₹ 0</div>
+        <div style="width: 29%; height: 5%; background: #161616; border-radius: 10px; position: absolute; top: 35%;">
+            <!-- <div class="notes-container" id="notesContainer" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <div class="notes-input" id="notesInput" contenteditable="true" onclick="enableInput()">Add Notes....</div>
+            </div> -->
+            <div class="action-button">
+                <span>Add</span>
+            </div>
+        </div>
+        <div class="dropdown left-dropdown">
+            <label for="account">Account:</label>
+            <select id="account" class="input-field custom-dropdown" required>
+                <option value="" disabled selected>Select any account</option>
+                <option value="cash">Cash</option>
+                <option value="bank-federal">Bank Account - Federal</option>
+                <option value="bank-paytm">Bank Account - Paytm</option>
+                <option value="credit">Credit Card</option>
+                <option value="wallet">Digital Wallets</option>
+                <!-- Add more options as needed -->
+            </select>
+        </div>
+
+        <div class="dropdown right-dropdown">
+            <label for="category">Category:</label>
+            <select id="category" class="input-field custom-dropdown" required>
+                <option value="" disabled selected>Select any Category</option>
+                <option value="food">Food</option>
+                <option value="grocery">Grocery</option>
+                <option value="transport">Transport</option>
+                <option value="utilities">Utilities</option>
+                <option value="others">Others</option>
+                <option value="salary">Salary</option>
+                <option value="bonus">Bonus</option>
+                <!-- Add more options as needed -->
+            </select>
+        </div>
+        <div class="keyboard-out">
+            <div class="num-row">
+                <div class="num num1"><p>1</p></div>
+                <div class="num num2"><p>2</p></div>
+                <div class="num num3"><p>3</p></div>
+            </div>
+            <div class="num-row">
+                <div class="num num4"><p>4</p></div>
+                <div class="num num5"><p>5</p></div>
+                <div class="num num6"><p>6</p></div>
+            </div>
+            <div class="num-row">
+                <div class="num num7"><p>7</p></div>
+                <div class="num num8"><p>8</p></div>
+                <div class="num num9"><p>9</p></div>
+            </div>
+            <div class="num-row">
+                <div class="num numDot"><p>.</p></div>
+                <div class="num num0"><p>0</p></div>
+                <div class="num numDelete"><p>Del</p></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            var firebaseConfig = {
+                apiKey: "AIzaSyCZfnZbZIKR1zyywjrXJu0MJOjETO35aTE",
+  authDomain: "split-bill-6c19e.firebaseapp.com",
+  databaseURL: "https://split-bill-6c19e-default-rtdb.firebaseio.com",
+  projectId: "split-bill-6c19e",
+  storageBucket: "split-bill-6c19e.appspot.com",
+  messagingSenderId: "297198677510",
+  appId: "1:297198677510:web:9cec9889c3224da9735d87"
+};
+            firebase.initializeApp(firebaseConfig);
+
+            let userId = null;
+            let account;
+            let isExpense = false; // Declare isExpense variable in the higher scope
+            let isSuccess = false; // Flag to track if the transaction was successful
+
+
+
+    // Get the account value inside the event listener
+    const accountDropdown = document.getElementById('account');
+    accountDropdown.addEventListener('change', function() {
+        account = accountDropdown.value;
+        console.log('Dropdown Value Before Parsing:', account);
+        console.log('Parsed Account:', account);
+    });
+
+
+
+
+
+            firebase.auth().onAuthStateChanged(function(user) {
+                if (user) {
+                    userId = user.uid;
+                    console.log('User ID:', userId);
+                } else {
+                    window.location.href = '../loginv3.html';
+                    console.log('User not logged in, redirecting to login page');
+                }
+            });
+
+            const numButtons = document.querySelectorAll('.num');
+
+            let currentAmount = '0';
+
+            numButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const buttonText = button.querySelector('p').innerText;
+
+                    if (buttonText === 'Del') {
+                        // Delete last character
+                        currentAmount = currentAmount.slice(0, -1);
+                    } else if (buttonText === '.') {
+                        // Add decimal point if not already present
+                        if (!currentAmount.includes('.')) {
+                            currentAmount += buttonText;
+                        }
+                    } else {
+                        // Add clicked number
+                        if (currentAmount === '0') {
+                            currentAmount = buttonText;
+                        } else {
+                            currentAmount += buttonText;
+                        }
+                    }
+
+                    // Update display
+                    const currencyDiv = document.querySelector('.currency');
+                    currencyDiv.innerText = `₹ ${currentAmount}`;
+                });
+            });
+
+            // After the transaction is added successfully, show the popup and redirect
+const ppoSuccessPopup = document.getElementById('ppo-success-popup');
+
+            const addButton = document.querySelector('.action-button');
+            addButton.addEventListener('click', function() {
+                const amount = parseFloat(currentAmount);
+                const selectedAccount = document.getElementById('account').value;
+    const selectedCategory = document.getElementById('category').value;
+                const selectedDate = datePickerInstance.selectedDates[0];
+                const selectedTime = timePickerInstance.selectedDates[0];
+
+
+                    // Validate input fields
+    if (!selectedAccount || selectedAccount === "" || !selectedCategory || selectedCategory === "") {
+        showError("Please select account and category.");
+        return;
+    }
+
+
+                // Validate notes, date, and time before adding the transaction
+                if (!selectedDate || !selectedTime) {
+                    console.error('Date or time is missing!');
+                    return;
+                }
+
+
+                if (selectedDate && selectedTime) {
+                    const dateTime = selectedDate.toLocaleDateString() + ' ' + selectedTime.toLocaleTimeString();
+                    console.log('Transaction Date & Time:', dateTime);
+
+                    const transaction = {
+                        amount: amount,
+                        account: account,
+                        category: selectedCategory, // Include the selected category
+                        date: selectedDate.toLocaleDateString(), // Format the date as you want it to appear in the database
+                        timestamp: firebase.database.ServerValue.TIMESTAMP
+                    };
+
+                    const transactionTypeRef = isExpense ? 'expenses' : 'income';
+
+                    const userTransactionRef = firebase.database().ref('users/' + userId + '/' + transactionTypeRef);
+                    userTransactionRef.push(transaction, function(error) {
+                        if (error) {
+                            console.error('Error adding transaction:', error);
+                            showError("Error adding transaction. Please try again later.");
+                            isSuccess = true;
+                        } else {
+                            currentAmount = '0';
+                            currencyDiv.innerText = `₹ ${currentAmount}`;
+                            console.log('Transaction added successfully!');
+                            ppoSuccessPopup.style.display = 'block';
+                            isSuccess = true; // Set isSuccess flag to true after successful transaction
+                            setTimeout(function() {
+                    ppoSuccessPopup.style.display = 'none';
+                    if (isSuccess) {
+                        setTimeout(function() {
+                            window.location.href = '../dashboard/dashboardv1.html';
+                        }, 1000);
+                    }
+                }, 1000);
+
+                        }
+                    });
+                } else {
+                    console.error('Date and time not selected!');
+                }
+            });
+
+            let datePickerInstance;
+            let timePickerInstance;
+
+            datePickerInstance = flatpickr('#date-picker', {
+                enableTime: false,
+                dateFormat: 'd M Y',
+                defaultDate: 'today',
+                position: 'left center',
+                onChange: function(selectedDates, dateStr, instance) {
+                    console.log('Selected Date:', dateStr);
+                }
+            });
+
+            timePickerInstance = flatpickr('#time-picker', {
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: 'H:i K',
+                defaultDate: new Date(),
+                position: 'right center',
+                onChange: function(selectedDates, dateStr, instance) {
+                    console.log('Selected Time:', dateStr);
+                }
+            });
+
+            setInterval(function() {
+                const now = new Date();
+                const selectedDate = datePickerInstance.selectedDates[0];
+                const selectedTime = timePickerInstance.selectedDates[0];
+
+                if (!selectedDate && !selectedTime) {
+                    datePickerInstance.setDate(now, true);
+                    timePickerInstance.setDate(now, true);
+                }
+            }, 1000);
+
+            const toggleCheckbox = document.querySelector('.toggle-checkbox');
+            const currencyDiv = document.querySelector('.currency');
+
+            toggleCheckbox.addEventListener('change', function() {
+        currencyDiv.classList.toggle('green', toggleCheckbox.checked);
+        isExpense = toggleCheckbox.checked; // Assign value to isExpense here
+    });
+        // After the transaction is successfully added, show the success popup
+});
+
+function showError(message) {
+    const errorPopup = document.getElementById('error-popup');
+    const errorText = document.getElementById('error-text');
+    errorText.innerText = message;
+    errorPopup.style.display = 'block';
+    
+    // Hide the error popup after 3 seconds (3000 milliseconds)
+    setTimeout(function() {
+        errorPopup.style.display = 'none';
+    }, 2000);
+}
+
+    </script>
+</body>
+
+</html>

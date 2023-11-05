@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+    <title>Expense Calculator Dashboard</title>
+    <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        crossorigin="anonymous">
+    <style>
+        @font-face {
+            font-family: 'Nothing';
+            src: url('../nothing-font.ttf') format('truetype'), url('../nothing-font-5x7.otf') format('opentype');
+        }
+
+        body {
+            background-color: #000000;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            color: #ffffff;
+            justify-content: center;
+            align-items: center;
+            min-height: 20vh;
+            text-align: center;
+            font-family: 'nothing';
+            margin-top: 5%; /* 5% gap from the top */
+        }
+
+        .username {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .edit-button {
+            background-color: #ffffff;
+            color: #000000;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        /* CSS for the fixed navbar */
+        .navbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background-color: #333;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            font-size: 12px; /* Adjust the font size as needed */
+        }
+
+        .nav-item {
+            color: white;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: 'montserrat';
+        }
+
+        .nav-center {
+            background-color: #ffff00;
+            border-radius: 50%;
+            padding: 15px;
+        }
+
+        .nav-center-btn {
+            color: #000000; /* Set the color of the "+" sign to black */
+            font-size: 24px;
+        }
+
+        .icon {
+            font-size: 20px;
+        }
+
+        .active-icon {
+            color: rgb(0, 0, 0); /* Change the color to indicate active state */
+        }
+
+        .white-box {
+    background-color: #ffffff;
+    color: #000000;
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 20px;
+    max-width: 86%; /* Limit maximum width to 86% of the parent element */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
+        .icon1 {
+            font-size: 24px;
+            margin-right: 11px;
+        }
+
+        .content {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+    flex-direction: row; /* Set the flex-direction to row */
+}
+.content a {
+    text-decoration: none; /* Remove underline */
+    color: inherit; /* Inherit color from parent (white in this case) */
+}
+
+
+        
+    </style>
+</head>
+
+<body>
+    <div class="container">
+            <header>
+                <div>Ku<span style="color: #EEFF00">DicK</span>Ka</div>
+            </header>
+        <header>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <div class="username" style="font-family: 'montserrat';">Username</div>
+            <button class="edit-button">Edit</button>
+        </header>
+    </div>
+    <div class="white-box">
+        <div class="content">
+            <div class="icon1"><i class="fas fa-user"></i></div>
+            <a href="./account.html">
+            <div>Account</div>
+        </div>
+        <div class="content">
+            <div class="icon1"><i class="fas fa-cogs"></i></div>
+            <a href="#">
+            <div>Settings</div>
+        </div>
+        <div class="content">
+            <div class="icon1"><i class="fas fa-sign-out-alt"></i></div>
+            <a href="#">
+            <div>Logout</div>
+        </div>
+    </div>
+    
+    <!-- Navbar codes -->
+
+    <div class="navbar">
+        <a href="#home" class="nav-item"><i class="fas fa-home icon"></i><span>Home</span></a>
+        <a href="/dashboard/dashboardv1.html" class="nav-item"><i class="fas fa-exchange-alt icon"></i><span>Transaction</span></a>
+        <div class="nav-item nav-center">
+            <a href="/dashboard/add.html" class="nav-center-btn"><i class="fas fa-plus icon"></i></a>
+        </div>
+        <a href="/dashboard/story1.html" class="nav-item"><i class="fas fa-chart-pie icon"></i><span>Report</span></a>
+        <a href="#profile" class="nav-item"><i class="fas fa-user icon"></i><span>Profile</span></a>
+    </div>
+
+</body>
+
+</html>
