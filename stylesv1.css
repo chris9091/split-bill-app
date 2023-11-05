@@ -1,6 +1,6 @@
 
 
-@font-face {
+/* @font-face {
     font-family: 'Integral CF';
     src: url('../IntegralCF-Regular.otf') format('opentype'),
          url('../IntegralCF-Regular.woff') format('woff'),
@@ -11,7 +11,7 @@
     font-family: 'Nothing';
     src: url('../nothing-font.ttf') format('truetype'),
     url('../nothing-font-5x7.otf') format('opentype'),
-  }
+  } */
   body {
     display: flex;
     touch-action: manipulation;

@@ -196,7 +196,7 @@ document.getElementById('user-id').textContent = ` ${truncatedUserId}`;
         }
     } else {
         // Redirect to login if the user is not signed in
-        window.location.href = '../loginv3.html';
+        window.location.href = '../index.html';
     }
 });
 
@@ -365,7 +365,7 @@ confirmButton.addEventListener('click', function() {
         try {
             firebase.auth().signOut().then(function() {
                 // Sign-out successful, redirect to the login page
-                window.location.href = '../loginv3.html';
+                window.location.href = '../index.html';
             }).catch(function(error) {
                 // Handle sign-out error
                 console.error('Logout error:', error);
