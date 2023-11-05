@@ -30,7 +30,7 @@
         firebase.auth().onAuthStateChanged(function(user) {
     if (user) {
         // User is signed in, redirect to dashboard
-        window.location.href = './dashboard/dashboardv1.html';
+        window.location.href = './dashboard.html';
     } else {
         // User is not signed in, keep the phone verification flow as it is
     }
@@ -107,7 +107,7 @@
         .then(function(result) {
             // User signed in successfully, you can redirect to the dashboard here
             var uid = result.user.uid; // Get the user's UID
-            window.location.href = './dashboard/dashboardv1.html';
+            window.location.href = './dashboard.html';
 
             // Store the phone number in the user's data
             const userRef = firebase.database().ref(`users/${uid}/details`);

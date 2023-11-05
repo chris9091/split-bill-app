@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search and Add</title>
+</head>
+
+<body>
+    <h1>Search and Add Friends</h1>
+
+    <label for="userId">Enter Last 4 Digits of User ID:</label>
+    <input type="text" id="userId">
+    <button onclick="searchUser()">Search</button>
+
+    <div id="searchResults"></div>
+
+    <h2>Friend Requests</h2>
+    <div id="friendRequests"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="firebase/firebase.js"></script>
+
+    <script>
+
+var firebaseConfig = {
+            apiKey: "AIzaSyCZfnZbZIKR1zyywjrXJu0MJOjETO35aTE",
+  authDomain: "split-bill-6c19e.firebaseapp.com",
+  databaseURL: "https://split-bill-6c19e-default-rtdb.firebaseio.com",
+  projectId: "split-bill-6c19e",
+  storageBucket: "split-bill-6c19e.appspot.com",
+  messagingSenderId: "297198677510",
+  appId: "1:297198677510:web:9cec9889c3224da9735d87"
+};
+        firebase.initializeApp(firebaseConfig);
+
+
+    
+        function searchUser() {
+            var userId = document.getElementById("userId").value;
+            // Perform a search based on the last 4 digits of user ID
+            // Add logic to query Firebase and display search results
+
+            // For example, assuming you have a Firebase users collection
+            var usersRef = firebase.firestore().collection("users");
+
+            usersRef.where("userId", "==", userId)
+                .get()
+                .then((querySnapshot) => {
+                    querySnapshot.forEach((doc) => {
+                        var userData = doc.data();
+                        var resultDiv = document.getElementById("searchResults");
+                        resultDiv.innerHTML = `<p>User ID: ${userData.userId}</p>
+                                              <p>Name: ${userData.name}</p>
+                                              <button onclick="sendFriendRequest('${doc.id}')">Send Friend Request</button>`;
+                    });
+                })
+                .catch((error) => {
+                    console.error("Error searching for user: ", error);
+                });
+        }
+
+        function sendFriendRequest(userId) {
+            // Logic to send friend request and update Firebase data
+            // For example, add the request to the other user's friend requests list
+            var currentUser = firebase.auth().currentUser;
+            var friendRequestsRef = firebase.firestore().collection("friendRequests").doc(userId);
+
+            friendRequestsRef.update({
+                requests: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+            })
+            .then(() => {
+                console.log("Friend request sent successfully.");
+            })
+            .catch((error) => {
+                console.error("Error sending friend request: ", error);
+            });
+        }
+
+        // Check for friend requests and display them
+        var currentUser = firebase.auth().currentUser;
+        var friendRequestsRef = firebase.firestore().collection("friendRequests").doc(currentUser.uid);
+
+        friendRequestsRef.onSnapshot((doc) => {
+            var friendRequests = doc.data().requests;
+            var friendRequestsDiv = document.getElementById("friendRequests");
+            friendRequestsDiv.innerHTML = "";
+
+            friendRequests.forEach((requestingUserId) => {
+                // Display friend requests and provide an option to accept them
+                var acceptButton = document.createElement("button");
+                acceptButton.innerText = "Accept Friend Request";
+                acceptButton.onclick = function() {
+                    acceptFriendRequest(requestingUserId);
+                };
+
+                friendRequestsDiv.innerHTML += `<p>Friend request from User ID: ${requestingUserId}</p>`;
+                friendRequestsDiv.appendChild(acceptButton);
+            });
+        });
+
+        function acceptFriendRequest(requestingUserId) {
+            // Logic to accept friend request and update Firebase data
+            // For example, add both users to each other's friend list
+            var currentUser = firebase.auth().currentUser;
+
+            // Add requesting user to current user's friend list
+            var currentUserFriendsRef = firebase.firestore().collection("friends").doc(currentUser.uid);
+            currentUserFriendsRef.update({
+                friends: firebase.firestore.FieldValue.arrayUnion(requestingUserId)
+            });
+
+            // Add current user to requesting user's friend list
+            var requestingUserFriendsRef = firebase.firestore().collection("friends").doc(requestingUserId);
+            requestingUserFriendsRef.update({
+                friends: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+            });
+
+            // Remove friend request from the list
+            var friendRequestsRef = firebase.firestore().collection("friendRequests").doc(currentUser.uid);
+            friendRequestsRef.update({
+                requests: firebase.firestore.FieldValue.arrayRemove(requestingUserId)
+            })
+            .then(() => {
+                console.log("Friend request accepted successfully.");
+            })
+            .catch((error) => {
+                console.error("Error accepting friend request: ", error);
+            });
+        }
+    </script>
+</body>
+
+</html>
