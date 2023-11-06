@@ -56,202 +56,236 @@
 
     firebase.initializeApp(firebaseConfig);
 
-    var currentUserId;
+    var usersRef = firebase.database().ref('users');
 
-    window.onload = function() {
-        const auth = firebase.auth();
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                userId = user.uid;
-                loadFriendRequests(userId);
-                loadAvailableUsers(userId);
-            } else {
-                // Handle user not signed in
+// Function to display available users
+function displayAvailableUsers() {
+  var currentUserUid = firebase.auth().currentUser.uid;
+  var availableUsersDiv = document.getElementById('availableUsers');
+  availableUsersDiv.innerHTML = ''; // Clear previous content
+
+  // Fetch friend requests and friends of the current user
+  firebase.database().ref('friendRequests').child(currentUserUid).once('value')
+    .then(function(friendRequestsSnapshot) {
+      return firebase.database().ref('users').once('value')
+        .then(function(usersSnapshot) {
+          usersSnapshot.forEach(function(userSnapshot) {
+            var userId = userSnapshot.key;
+            var userDetails = userSnapshot.val().details;
+
+            // Check if the user is not the current user,
+            // not already friends, and no pending or confirmed friend request
+            if (userId !== currentUserUid &&
+                !usersSnapshot.child(currentUserUid).child('friends').child(userId).exists() &&
+                !friendRequestsSnapshot.child(userId).exists()) {
+
+              // Create a div element for the user
+              var userDiv = document.createElement('div');
+              userDiv.textContent = userDetails.name;
+
+              // Create friend request button
+              var requestButton = document.createElement('button');
+              requestButton.textContent = 'Send Friend Request';
+              requestButton.addEventListener('click', function() {
+                sendFriendRequest(userId);
+              });
+
+              // Append the button to the user div
+              userDiv.appendChild(requestButton);
+
+              // Append the user div to the available users section
+              availableUsersDiv.appendChild(userDiv);
             }
+          });
+
+          // If no available users, show a message
+          if (availableUsersDiv.children.length === 0) {
+            availableUsersDiv.textContent = 'No available users.';
+          }
         });
-    };
-
-    function sendFriendRequest(friendId, friendName, friendPhoneNumber, currentUserId) {
-    const senderFriendRequestRef = firebase.database().ref(`users/${userId}/friendRequests/${friendId}`);
-    const receiverFriendRequestRef = firebase.database().ref(`users/${userId}/friendRequests/${currentUserId}`);
-
-    // Add friend request to sender's friendRequests with pending status
-    senderFriendRequestRef.set({
-        senderId: currentUserId,
-        senderName: 'Sender Name', // Replace with sender's name
-        senderPhoneNumber: friendPhoneNumber, // Pass the correct sender's phone number here
-        status: 'pending'
+    })
+    .catch(function(error) {
+      console.error('Error fetching available users:', error);
     });
-
-    // Add friend request to receiver's friendRequests with pending status
-    receiverFriendRequestRef.set({
-        senderId: currentUserId,
-        senderName: 'Sender Name', // Replace with sender's name
-        senderPhoneNumber: friendPhoneNumber, // Pass the correct sender's phone number here
-        status: 'pending'
-    });
-
-    console.log(`Friend request sent to UID: ${friendId}, Name: ${friendName}, Phone Number: ${friendPhoneNumber}`);
 }
 
 
+// Function to display available users
+function displayAvailableUsers() {
+  var currentUserUid = firebase.auth().currentUser.uid;
+  var availableUsersDiv = document.getElementById('availableUsers');
+  availableUsersDiv.innerHTML = ''; // Clear previous content
 
-        // Confirm friend request
-        function confirmFriendRequest(currentUserId, friendId) {
-            // Update status to accepted in the sender's friend requests
-            firebase.database().ref(`users/${currentUserId}/friendRequests/${friendId}`).update({
-                status: 'accepted'
-            });
+  firebase.database().ref('users').once('value')
+    .then(function(usersSnapshot) {
+      usersSnapshot.forEach(function(userSnapshot) {
+        var userId = userSnapshot.key;
+        var userDetails = userSnapshot.val().details;
 
-            // Update status to accepted in the receiver's friend requests
-            firebase.database().ref(`users/${friendId}/friendRequests/${currentUserId}`).update({
-                status: 'accepted'
-            });
+        if (userId !== currentUserUid && !userSnapshot.child('friends').child(currentUserUid).exists()) {
+          var userDiv = document.createElement('div');
+          userDiv.textContent = userDetails.name;
 
-            // Move friend from sender's pendingFriends to friends list
-            const friendDetails = {
-                name: 'Friend Name', // Replace with friend's name
-                phoneNumber: 'Friend Phone Number' // Replace with friend's phone number
-            };
-            firebase.database().ref(`users/${currentUserId}/friends/${friendId}`).set(friendDetails);
+          var requestButton = document.createElement('button');
+          requestButton.textContent = 'Send Friend Request';
+          requestButton.addEventListener('click', function() {
+            sendFriendRequest(userId);
+          });
 
-            // Move friend from receiver's pendingFriends to friends list
-            const senderDetails = {
-                name: 'Sender Name', // Replace with sender's name
-                phoneNumber: 'Sender Phone Number' // Replace with sender's phone number
-            };
-            firebase.database().ref(`users/${friendId}/friends/${currentUserId}`).set(senderDetails);
+          userDiv.appendChild(requestButton);
+          availableUsersDiv.appendChild(userDiv);
         }
+      });
 
-    function loadFriendRequests(currentUserId) {
-        const friendRequestsRef = firebase.database().ref(`users/${currentUserId}/friendRequests`);
-        friendRequestsRef.on('value', snapshot => {
-            const friendRequests = snapshot.val();
-            const friendRequestsDiv = document.getElementById('friendRequests');
-            friendRequestsDiv.innerHTML = '';
-            if (friendRequests) {
-                Object.keys(friendRequests).forEach(key => {
-                    const request = friendRequests[key];
-                    if (request.status === 'pending') {
-                        const requestElement = document.createElement('div');
-                        requestElement.className = 'request-box';
-                        requestElement.innerHTML = `
-                            <div>Sender ID: ${request.senderId}</div>
-                            <div>Sender Name: ${request.senderName}</div>
-                            <div>Sender Phone Number: ${request.senderPhoneNumber}</div>
-                            <button class="confirm-btn" onclick="confirmFriendRequest('${key}', '${request.senderId}', '${currentUserId}')">Confirm</button>
-                        `;
-                        friendRequestsDiv.appendChild(requestElement);
-                    }
-                });
-            } else {
-                friendRequestsDiv.textContent = 'No pending friend requests.';
-            }
+      if (availableUsersDiv.children.length === 0) {
+        availableUsersDiv.textContent = 'No available users.';
+      }
+    })
+    .catch(function(error) {
+      console.error('Error fetching available users:', error);
+    });
+}
+
+// Function to send a friend request
+function sendFriendRequest(receiverId) {
+  var currentUserUid = firebase.auth().currentUser.uid;
+
+  firebase.database().ref('friendRequests').child(receiverId).child(currentUserUid).set({
+    sender: currentUserUid,
+    status: 'pending',
+    timestamp: new Date().toString()
+  })
+  .then(function() {
+    alert('Friend request sent successfully.');
+    displayAvailableUsers();
+  })
+  .catch(function(error) {
+    console.error('Error sending friend request:', error);
+  });
+}
+
+// Function to display friend requests
+function displayFriendRequests() {
+  var currentUserUid = firebase.auth().currentUser.uid;
+  var friendRequestsDiv = document.getElementById('friendRequests');
+  friendRequestsDiv.innerHTML = '';
+
+  firebase.database().ref('friendRequests').child(currentUserUid).once('value')
+    .then(function(snapshot) {
+      snapshot.forEach(function(requestSnapshot) {
+        var senderId = requestSnapshot.key;
+        var request = requestSnapshot.val();
+
+        if (request.status === 'pending') {
+          firebase.database().ref('users').child(senderId).child('details').once('value')
+            .then(function(userSnapshot) {
+              var senderName = userSnapshot.val().name;
+
+              var requestDiv = document.createElement('div');
+              requestDiv.textContent = 'Friend request from: ' + senderName;
+
+              var acceptButton = document.createElement('button');
+              acceptButton.textContent = 'Accept';
+              acceptButton.addEventListener('click', function() {
+                acceptFriendRequest(senderId);
+              });
+
+              requestDiv.appendChild(acceptButton);
+              friendRequestsDiv.appendChild(requestDiv);
+            });
+        }
+      });
+
+      if (friendRequestsDiv.children.length === 0) {
+        friendRequestsDiv.textContent = 'No friend requests.';
+      }
+    })
+    .catch(function(error) {
+      console.error('Error fetching friend requests:', error);
+    });
+}
+
+// Function to accept a friend request
+function acceptFriendRequest(senderId) {
+  var currentUserUid = firebase.auth().currentUser.uid;
+
+  firebase.database().ref('friendRequests').child(currentUserUid).child(senderId).update({ status: 'confirmed' })
+    .then(function() {
+      firebase.database().ref('users').child(currentUserUid).child('friends').child(senderId).set({ status: 'confirmed' })
+        .then(function() {
+          firebase.database().ref('users').child(senderId).child('friends').child(currentUserUid).set({ status: 'confirmed' })
+            .then(function() {
+              displayFriendRequests();
+              displayAvailableUsers();
+            })
+            .catch(function(error) {
+              console.error('Error adding receiver to sender\'s friends list:', error);
+            });
+        })
+        .catch(function(error) {
+          console.error('Error adding sender to receiver\'s friends list:', error);
         });
-    }
-
-// Load available users and display them in the availableUsersDiv
-function loadAvailableUsers(currentUserId) {
-    const usersRef = firebase.database().ref('users');
-    usersRef.on('value', snapshot => {
-        const users = snapshot.val();
-        const availableUsersDiv = document.getElementById('availableUsers');
-        const friendsDiv = document.getElementById('friends');
-        const friendRequestsDiv = document.getElementById('friendRequests');
-
-        // Clear previous content
-        availableUsersDiv.innerHTML = '';
-        friendsDiv.innerHTML = '';
-        friendRequestsDiv.innerHTML = '';
-
-        if (users) {
-            Object.keys(users).forEach(key => {
-                if (key !== currentUserId) {
-                    const user = users[key].details;
-                    const status = users[currentUserId].friendRequests && users[currentUserId].friendRequests[key] ? users[currentUserId].friendRequests[key].status : null;
-
-                    if (status === 'pending') {
-                        // Display user data in friend requests section
-                        const friendRequestElement = document.createElement('div');
-                        friendRequestElement.className = 'user-box';
-                        friendRequestElement.innerHTML = `
-                            <div>UID: ${key.slice(-4)}</div>
-                            <div>Name: ${user.name}</div>
-                            <div>Phone Number: ${user.phoneNumber}</div>
-                            <button class="confirm-btn" id="confirmButton-${key}">Confirm</button>
-                        `;
-                        friendRequestsDiv.appendChild(friendRequestElement);
-
-                        const confirmButton = document.getElementById(`confirmButton-${key}`);
-                        confirmButton.addEventListener('click', () => confirmFriendRequest(currentUserId, key));
-                    } else if (status === 'accepted') {
-                        // Display user data in friends section
-                        const friendElement = document.createElement('div');
-                        friendElement.className = 'user-box';
-                        friendElement.innerHTML = `
-                            <div>UID: ${key.slice(-4)}</div>
-                            <div>Name: ${user.name}</div>
-                            <div>Phone Number: ${user.phoneNumber}</div>
-                        `;
-                        friendsDiv.appendChild(friendElement);
-                    } else if (status === null) {
-                        // Display user data in available users section
-                        const userElement = document.createElement('div');
-                        userElement.className = 'user-box';
-                        userElement.innerHTML = `
-                            <div>UID: ${key.slice(-4)}</div>
-                            <div>Name: ${user.name}</div>
-                            <div>Phone Number: ${user.phoneNumber}</div>
-                            <button class="add-friend-btn" id="addFriendButton-${key}">Add Friend</button>
-                        `;
-                        availableUsersDiv.appendChild(userElement);
-
-                        const addButton = document.getElementById(`addFriendButton-${key}`);
-                        addButton.addEventListener('click', () => sendFriendRequest(currentUserId, key, user.name, user.phoneNumber));
-                    }
-                }
-            });
-        }
-
-        // Hide friend requests section if there are no friend requests
-        if (friendRequestsDiv.children.length === 0) {
-            friendRequestsDiv.style.display = 'none';
-        } else {
-            friendRequestsDiv.style.display = 'block';
-        }
+    })
+    .catch(function(error) {
+      console.error('Error accepting friend request:', error);
     });
 }
 
 
 
 
-// Confirm friend request
-function confirmFriendRequest(currentUserId, friendId) {
-    // Update status to accepted in the sender's friend requests
-    firebase.database().ref(`users/${currentUserId}/friendRequests/${friendId}`).update({
-        status: 'accepted'
+// Function to display friends
+function displayFriends() {
+  var currentUserUid = firebase.auth().currentUser.uid;
+  var friendsDiv = document.getElementById('friends');
+  friendsDiv.innerHTML = ''; // Clear previous content
+
+  // Fetch confirmed friends of the current user
+  firebase.database().ref('users').child(currentUserUid).child('friends').orderByChild('status').equalTo('confirmed').once('value')
+    .then(function(friendsSnapshot) {
+      friendsSnapshot.forEach(function(friendSnapshot) {
+        var friendId = friendSnapshot.key;
+        
+        // Fetch friend's name from the database
+        firebase.database().ref('users').child(friendId).child('details').once('value')
+          .then(function(userSnapshot) {
+            var friendName = userSnapshot.val().name;
+
+            // Create a div element for the friend
+            var friendDiv = document.createElement('div');
+            friendDiv.textContent = 'Friend: ' + friendName + ', Status: Confirmed';
+
+            // Append the friend div to the friends section
+            friendsDiv.appendChild(friendDiv);
+          })
+          .catch(function(error) {
+            console.error('Error fetching friend details:', error);
+          });
+      });
+
+      // If no friends, show a message
+      if (friendsDiv.children.length === 0) {
+        friendsDiv.textContent = 'No confirmed friends.';
+      }
+    })
+    .catch(function(error) {
+      console.error('Error fetching friends:', error);
     });
-
-    // Update status to accepted in the receiver's friend requests
-    firebase.database().ref(`users/${friendId}/friendRequests/${currentUserId}`).update({
-        status: 'accepted'
-    });
-
-    // Move friend from sender's pendingFriends to friends list
-    const friendDetails = {
-        name: users[friendId].details.name,
-        phoneNumber: users[friendId].details.phoneNumber
-    };
-    firebase.database().ref(`users/${currentUserId}/friends/${friendId}`).set(friendDetails);
-
-    // Move friend from receiver's pendingFriends to friends list
-    const senderDetails = {
-        name: users[currentUserId].details.name,
-        phoneNumber: users[currentUserId].details.phoneNumber
-    };
-    firebase.database().ref(`users/${friendId}/friends/${currentUserId}`).set(senderDetails);
 }
 
+
+// Check if user is logged in
+firebase.auth().onAuthStateChanged(function(user) {
+  if (user) {
+    // User is signed in.
+    displayAvailableUsers();
+    displayFriendRequests(); // Call this function to display friend requests
+  } else {
+    // No user is signed in.
+    // Redirect to the login page
+    window.location.href = './index.html';
+  }
+});
 
     </script>
 </body>
