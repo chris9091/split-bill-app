@@ -3,49 +3,55 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
-    <title>Add Expense</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Sharing</title>
     <link rel="stylesheet" href="styles1.css">
+    <script src="app.js"></script>
+
 </head>
 
 <body>
     <div class="container">
-        <div class="header">
-            <h1>Add Expense</h1>
+        <h2>Expense Sharing</h2>
+        <div>
+            <label for="amount">Enter Amount:</label>
+            <input type="number" id="amount" placeholder="Enter the amount">
         </div>
-        <div class="expense-form">
-            <label for="amount">Amount:</label>
-            <input type="number" id="amount" placeholder="Enter amount" required>
-            <label for="splitOption">Split Option:</label>
+        <div>
+            <label for="splitOption">Select Split Option:</label>
             <select id="splitOption">
-                <option value="percentage">Percentage</option>
-                <option value="custom">Custom Amount</option>
+                <option value="equal">Equal Split</option>
+                <option value="percentage">Percentage Split</option>
+                <option value="custom">Custom Split</option>
             </select>
-            <div id="percentageInput" style="display: none;">
-                <label for="percentage">Percentage:</label>
-                <input type="number" id="percentage" placeholder="Enter percentage">
-                <div id="splitAmount"></div>
-            </div>
-            <div id="customInput" style="display: none;">
-                <label for="customAmount">Custom Amount:</label>
-                <input type="number" id="customAmount" placeholder="Enter custom amount">
-                <div id="remainingAmount"></div>
-                <div id="userShare"></div>
-
-            </div>
+        </div>
+        <div id="percentageInput" style="display: none;">
+            <label for="percentage">Enter Percentage:</label>
+            <input type="number" id="percentage" placeholder="Enter the percentage">
+        </div>
+        <div id="customAmountInput" style="display: none;">
+            <label for="customAmount">Enter Custom Amount:</label>
+            <input type="number" id="customAmount" placeholder="Enter custom amount">
+        </div>
+        <div>
             <label for="whoPaid">Who Paid:</label>
             <select id="whoPaid">
-                <option value="user">You</option>
-                <option value="friend">Friend</option>
-                <div id="whoPaid"></div>
+                <option value="userId">You</option>
+                <option value="friendId">Friend</option>
             </select>
-            <button id="saveExpenseButton">Save Expense</button>
+        </div>
+        <button id="saveExpenseButton">Save Expense</button>
+        <div id="expenseDetails">
+            <p id="splitAmount"></p>
+            <p id="remainingAmount"></p>
+            <p id="whoPaid"></p>
+            <p id="currentUserName" style="display: none;"></p>
+            <p id="friendUserName" style="display: none;"></p>
         </div>
     </div>
-
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="app.js"></script>
 </body>
 
