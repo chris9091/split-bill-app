@@ -20,11 +20,9 @@ document.addEventListener('DOMContentLoaded', async function () {
         // You may redirect the user to the login page or take appropriate action.
         return;
     }
-
 // Get user names from the database
 function getUserNames(callback) {
     // Fetch user names from Firebase
-    var userId = 'userId'; // Replace with the actual user ID
     var usersRef = firebase.database().ref('users');
     usersRef.once('value')
         .then(function (snapshot) {
@@ -40,6 +38,7 @@ function getUserNames(callback) {
             callback([]); // Provide an empty array if there's an error
         });
 }
+
 
     // DOM elements
     var amountInput = document.getElementById('amount');
@@ -61,84 +60,58 @@ function getUserNames(callback) {
     var friendId = urlParams.get('friendId');
     var userId = user.uid;
 
-    // Populate the dropdown with user names only once
-    var dropdownPopulated = false;
+    // Fetch and display user names
+    var currentUserRef = firebase.database().ref('users/' + userId + '/details/name');
+    currentUserRef.once('value', function (snapshot) {
+        console.log('Firebase Data Snapshot:', snapshot.val()); // Log the snapshot value
+        var currentUserName = snapshot.val();
 
-    function populateDropdownOnce(userNames) {
-        if (!dropdownPopulated) {
+        if (currentUserName !== null) {
+            currentUserNameElement.textContent = `Your Name: ${currentUserName}`;
+            currentUserNameElement.style.display = 'block';
+        } else {
+            console.error('Error: User name not found in Firebase.');
+        }
+    });
+
+    var friendRef = firebase.database().ref('users').child(friendId).child('details').child('name');
+    friendRef.once('value', function (snapshot) {
+        var friendName = snapshot.val();
+        friendUserNameElement.textContent = `Friend's Name: ${friendName}`;
+        friendUserNameElement.style.display = 'block';
+
+        // Now, populate the dropdown with user names
+        getUserNames(function (userNames) {
+            // Clear existing options in the dropdown
+            whoPaidSelect.innerHTML = "";
+
+            // Populate the dropdown with user names
             userNames.forEach(function (name, index) {
                 var option = document.createElement('option');
                 option.value = index; // Use a unique identifier
                 option.text = name;
                 whoPaidSelect.add(option);
             });
-
-            // Trigger updateShare after populating dropdown
-            updateShare();
-            dropdownPopulated = true;
-        }
-    }
-
-// Fetch and display user names
-var currentUserRef = firebase.database().ref('users/' + userId + '/details/name');
-currentUserRef.once('value', function (snapshot) {
-    console.log('Firebase Data Snapshot:', snapshot.val()); // Log the snapshot value
-    var currentUserName = snapshot.val();
-
-    if (currentUserName !== null) {
-        currentUserNameElement.textContent = `Your Name: ${currentUserName}`;
-        currentUserNameElement.style.display = 'block';
-    } else {
-        console.error('Error: User name not found in Firebase.');
-    }
-});
-
-var friendRef = firebase.database().ref('users').child(friendId).child('details').child('name');
-friendRef.once('value', function (snapshot) {
-    var friendName = snapshot.val();
-    friendUserNameElement.textContent = `Friend's Name: ${friendName}`;
-    friendUserNameElement.style.display = 'block';
-    
-    // Now, populate the dropdown with user names
-    getUserNames(function (userNames) {
-        // Clear existing options in the dropdown
-        whoPaidSelect.innerHTML = "";
-    
-        // Populate the dropdown with user names
-        userNames.forEach(function (name, index) {
-            var option = document.createElement('option');
-            option.value = index; // Use a unique identifier
-            option.text = name;
-            whoPaidSelect.add(option);
         });
 
-    // Add event listener to the "Who Paid" dropdown
-    whoPaidSelect.addEventListener('change', function () {
-        updateShare();
+        // Add event listener to the "Who Paid" dropdown
+        whoPaidSelect.addEventListener('change', function () {
+            updateShare();
+        });
     });
 
-    // Trigger updateShare after populating dropdown
-    updateShare();
-});
-});
+    // Function to populate "Who Paid" dropdown
+function populateWhoPaidDropdown(userNames) {
+    var whoPaidDropdown = document.getElementById('whoPaid');
 
-
-    // Update share when amount or options change
-    amountInput.addEventListener('input', function () {
-        updateShare();
+    userNames.forEach(function (name, index) {
+        var option = document.createElement('option');
+        option.value = index; // Use a unique identifier
+        option.text = name;
+        whoPaidDropdown.add(option);
     });
+}
 
-    splitOptionSelect.addEventListener('change', function () {
-        updateShare();
-    });
-
-    percentageInput.addEventListener('input', function () {
-        updateShare();
-    });
-
-    customAmountInput.addEventListener('input', function () {
-        updateShare();
-    });
 
 // Function to update share based on user input
 function updateShare() {
@@ -148,6 +121,7 @@ function updateShare() {
     var customAmount = parseFloat(customAmountInput.value) || 0;
 
     if (isNaN(amount) || amount <= 0) {
+        console.error('Error: Invalid amount.');
         return;
     }
 
@@ -163,7 +137,7 @@ function updateShare() {
     splitAmountElement.textContent = `Your Share: ₹${shareAmount}`;
     remainingAmountElement.textContent = `Friend's Share: ₹${(amount - shareAmount).toFixed(2)}`;
 
-    // Check if whoPaidSelect has options
+    // Check if whoPaidSelect has options before updating the dropdown
     if (whoPaidSelect.options.length > 0) {
         whoPaidElement.textContent = `Paid by: ${whoPaidSelect.options[whoPaidSelect.selectedIndex].text}`;
     } else {
@@ -171,8 +145,35 @@ function updateShare() {
     }
 }
 
+// Update share when amount or options change
+amountInput.addEventListener('input', function () {
+    updateShare();
+});
+
+splitOptionSelect.addEventListener('change', function () {
+    var splitOption = this.value;
+    toggleSplitOptions(splitOption);
+    updateShare(); // Update the share immediately after changing the split option
+});
+
+percentageInput.addEventListener('input', function () {
+    updateShare();
+});
+
+customAmountInput.addEventListener('input', function () {
+    updateShare();
+});
+
+// Add event listener to the "Who Paid" dropdown
+whoPaidSelect.addEventListener('change', function () {
+    updateShare();
+});
 
 
+
+
+
+    
     // Save expense to the database
     saveExpenseButton.addEventListener('click', function () {
         // Your existing code
