@@ -11,44 +11,56 @@
 </head>
 
 <body>
-    <div class="container">
-        <h2>Expense Sharing</h2>
-        <div>
-            <label for="amount">Enter Amount:</label>
-            <input type="number" id="amount" placeholder="Enter the amount">
-        </div>
-        <div>
-            <label for="splitOption">Select Split Option:</label>
-            <select id="splitOption">
-                <option value="equal">Equal Split</option>
-                <option value="percentage">Percentage Split</option>
-                <option value="custom">Custom Split</option>
-            </select>
-        </div>
-        <div id="percentageInput" style="display: none;">
-            <label for="percentage">Enter Percentage:</label>
-            <input type="number" id="percentage" placeholder="Enter the percentage">
-        </div>
-        <div id="customAmountInput" style="display: none;">
-            <label for="customAmount">Enter Custom Amount:</label>
-            <input type="number" id="customAmount" placeholder="Enter custom amount">
-        </div>
-        <div>
-            <label for="whoPaid">Who Paid:</label>
-            <select id="whoPaid">
-                <option value="userId">You</option>
-                <option value="friendId">Friend</option>
-            </select>
-        </div>
-        <button id="saveExpenseButton">Save Expense</button>
-        <div id="expenseDetails">
-            <p id="splitAmount"></p>
-            <p id="remainingAmount"></p>
-            <p id="whoPaid"></p>
-            <p id="currentUserName" style="display: none;"></p>
-            <p id="friendUserName" style="display: none;"></p>
-        </div>
+    <h1>kudickka split</h1>
+
+    <div>
+        <h2>User Details</h2>
+        <p id="currentUserName"></p>
+        <p id="friendUserName"></p>
     </div>
+
+    <div>
+        <label for="amount">Total Amount (₹):</label>
+        <input type="number" id="amount" />
+    </div>
+
+    <div>
+        <label for="splitOption">Split Option:</label>
+        <select id="splitOption">
+            <option value="equal">Equal Split</option>
+            <option value="percentage">Percentage Split</option>
+            <option value="custom">Custom Split</option>
+        </select>
+    </div>
+
+    <div id="percentageInput" style="display: none;">
+        <label for="percentage">Percentage (%):</label>
+        <input type="number" id="percentage" />
+    </div>
+
+    <div id="customAmountInput" style="display: none;">
+        <label for="customAmount">Custom Amount (₹):</label>
+        <input type="number" id="customAmount" />
+    </div>
+
+    <div>
+        <label for="whoPaid">Who Paid:</label>
+        <select id="whoPaid"></select>
+    </div>
+
+    <div>
+        <h2>Expense Details</h2>
+        <p id="splitAmount"></p>
+        <p id="remainingAmount"></p>
+        <p id="whoPaid"></p>
+    </div>
+
+    <button id="saveExpenseButton">Save Expense</button>
+
+
+
+
+
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
