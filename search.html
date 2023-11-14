@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Search and Add Friends</title>
+    <style>
+        body {
+            background: black;
+            color: white;
+            font-family: Inter, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            
+        }
+
+        .container {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+            padding: 10% 5%;
+        }
+
+        .logo {
+            text-align: center;
+            font-size: 16px;
+            font-family: 'Nothing Font (5x7)';
+            font-weight: 400;
+            word-wrap: break-word;
+        }
+
+        .logo span {
+            font-weight: 400;
+        }
+
+        .section {
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            text-align: left;
+        }
+
+        .friend-item,
+        .request-item,
+        .available-user-item {
+            width: 80%;
+            min-height: 80px;
+            position: relative;
+            background: #161616;
+            border-radius: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            margin-bottom: 10px;
+        }
+
+        .friend-name,
+        .request-sender,
+        .available-user-name {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .friend-status {
+            font-size: 12px;
+            color: #00FF00;
+        }
+
+        .button {
+            width: 40%;
+            height: 50px;
+            background: white;
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: black;
+            font-size: 10px;
+            font-family: 'Integral CF', sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="logo">
+        <span style="color: white;">Ku</span>
+        <span style="color: #EEFF00;">DicK</span>
+        <span style="color: white;">Ka</span>
+    </div>
+    <div class="container">
+        <div class="section">
+            <h2>Friends</h2>
+            <div id="friends"></div>
+        </div>
+        <div class="section">
+            <h2>Friend Requests</h2>
+            <div id="friendRequests"></div>
+        </div>
+        <div class="section">
+            <h2>Available Users</h2>
+            <div id="availableUsers"></div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <script>
+        var firebaseConfig = {
+                apiKey: "AIzaSyCZfnZbZIKR1zyywjrXJu0MJOjETO35aTE",
+                authDomain: "split-bill-6c19e.firebaseapp.com",
+                databaseURL: "https://split-bill-6c19e-default-rtdb.firebaseio.com",
+                projectId: "split-bill-6c19e",
+                storageBucket: "split-bill-6c19e.appspot.com",
+                messagingSenderId: "297198677510",
+                appId: "1:297198677510:web:9cec9889c3224da9735d87"
+              };
+    
+        firebase.initializeApp(firebaseConfig);
+
+function createStyledButton(text, onClickFunction) {
+    var button = document.createElement('button');
+    button.textContent = text;
+    button.className = 'button';
+    button.addEventListener('click', onClickFunction);
+    return button;
+}
+
+function displayAvailableUsers() {
+    var currentUserUid = firebase.auth().currentUser.uid;
+    var availableUsersDiv = document.getElementById('availableUsers');
+    availableUsersDiv.innerHTML = '';
+
+    firebase.database().ref('users').once('value')
+        .then(function(usersSnapshot) {
+            usersSnapshot.forEach(function(userSnapshot) {
+                var userId = userSnapshot.key;
+                var userDetails = userSnapshot.val().details;
+
+                if (userId !== currentUserUid &&
+                    !usersSnapshot.child(currentUserUid).child('friends').child(userId).exists()) {
+
+                    var userDiv = document.createElement('div');
+                    userDiv.className = 'available-user-item';
+
+                    var requestButton = createStyledButton('Send Friend Request', function() {
+                        sendFriendRequest(userId);
+                    });
+
+                    var userName = document.createElement('div');
+                    userName.className = 'friend-name';
+                    userName.textContent = userDetails.name;
+
+                    userDiv.appendChild(userName);
+                    userDiv.appendChild(requestButton);
+
+                    availableUsersDiv.appendChild(userDiv);
+                }
+            });
+
+            if (availableUsersDiv.children.length === 0) {
+                availableUsersDiv.textContent = 'No available users.';
+            }
+        })
+        .catch(function(error) {
+            console.error('Error fetching available users:', error);
+        });
+}
+
+function sendFriendRequest(receiverId) {
+    var currentUserUid = firebase.auth().currentUser.uid;
+
+    firebase.database().ref('friendRequests').child(receiverId).child(currentUserUid).once('value')
+        .then(function(snapshot) {
+            if (!snapshot.exists()) {
+                var friendRequest = {
+                    status: 'pending',
+                    sender: currentUserUid,
+                    timestamp: new Date().toString()
+                };
+
+                firebase.database().ref('friendRequests').child(receiverId).child(currentUserUid).set(friendRequest)
+                    .then(function() {
+                        alert('Friend request sent successfully.');
+                        displayFriends();
+                        displayAvailableUsers();
+                    })
+                    .catch(function(error) {
+                        console.error('Error sending friend request:', error);
+                    });
+            } else {
+                alert('Friend request already sent.');
+            }
+        })
+        .catch(function(error) {
+            console.error('Error checking friend request status:', error);
+        });
+}
+
+function displayFriends() {
+    var currentUserUid = firebase.auth().currentUser.uid;
+    var friendsDiv = document.getElementById('friends');
+    friendsDiv.innerHTML = '';
+
+    firebase.database().ref('users').child(currentUserUid).child('friends').orderByChild('status').equalTo('confirmed').once('value')
+        .then(function(friendsSnapshot) {
+            friendsSnapshot.forEach(function(friendSnapshot) {
+                var friendId = friendSnapshot.key;
+
+                firebase.database().ref('users').child(friendId).child('details').once('value')
+                    .then(function(userSnapshot) {
+                        var friendName = userSnapshot.val().name;
+
+                        var friendDiv = document.createElement('div');
+                        friendDiv.className = 'friend-item';
+
+                        var friendNameElement = document.createElement('div');
+                        friendNameElement.className = 'friend-name';
+                        friendNameElement.textContent = friendName;
+
+                        var friendStatusElement = document.createElement('div');
+                        friendStatusElement.className = 'friend-status';
+                        friendStatusElement.textContent = 'Friends';
+
+                        var addExpenseButton = createStyledButton('Add Expense', function() {
+            // Redirect to add expense page for the selected friend (pass friendId to the URL)
+            window.location.href = './add_expense.html?friendId=' + friendId;
+        });
+
+                        friendDiv.appendChild(friendNameElement);
+                        friendDiv.appendChild(friendStatusElement);
+                        friendDiv.appendChild(addExpenseButton); // Append the add expense button
+
+
+                        friendsDiv.appendChild(friendDiv);
+                    })
+                    .catch(function(error) {
+                        console.error('Error fetching friend details:', error);
+                    });
+            });
+
+            if (friendsDiv.children.length === 0) {
+                friendsDiv.textContent = 'No confirmed friends.';
+            }
+        })
+        .catch(function(error) {
+            console.error('Error fetching friends:', error);
+        });
+}
+
+function displayFriendRequests() {
+    var currentUserUid = firebase.auth().currentUser.uid;
+    var friendRequestsDiv = document.getElementById('friendRequests');
+    friendRequestsDiv.innerHTML = '';
+
+    firebase.database().ref('friendRequests').child(currentUserUid).once('value')
+        .then(function(snapshot) {
+            snapshot.forEach(function(requestSnapshot) {
+                var senderId = requestSnapshot.key;
+                var request = requestSnapshot.val();
+
+                if (request.status === 'pending') {
+                    firebase.database().ref('users').child(senderId).child('details').once('value')
+                        .then(function(userSnapshot) {
+                            var senderName = userSnapshot.val().name;
+
+                            var requestDiv = document.createElement('div');
+                            requestDiv.className = 'request-item';
+
+                            var senderNameElement = document.createElement('div');
+                            senderNameElement.className = 'request-sender';
+                            senderNameElement.textContent = senderName;
+
+                            var acceptButton = createStyledButton('Accept', function() {
+                                acceptFriendRequest(senderId);
+                            });
+
+                            requestDiv.appendChild(senderNameElement);
+                            requestDiv.appendChild(acceptButton);
+
+                            friendRequestsDiv.appendChild(requestDiv);
+                        });
+                }
+            });
+
+            if (friendRequestsDiv.children.length === 0) {
+                friendRequestsDiv.textContent = 'No friend requests.';
+            }
+        })
+        .catch(function(error) {
+            console.error('Error fetching friend requests:', error);
+        });
+}
+
+function acceptFriendRequest(senderId) {
+    var currentUserUid = firebase.auth().currentUser.uid;
+
+    firebase.database().ref('friendRequests').child(currentUserUid).child(senderId).update({ status: 'confirmed' })
+        .then(function() {
+            firebase.database().ref('users').child(currentUserUid).child('friends').child(senderId).set({ status: 'confirmed' })
+                .then(function() {
+                    firebase.database().ref('users').child(senderId).child('friends').child(currentUserUid).set({ status: 'confirmed' })
+                        .then(function() {
+                            displayFriendRequests();
+                            displayFriends();
+                        })
+                        .catch(function(error) {
+                            console.error('Error adding receiver to sender\'s friends list:', error);
+                        });
+                })
+                .catch(function(error) {
+                    console.error('Error adding sender to receiver\'s friends list:', error);
+                });
+        })
+        .catch(function(error) {
+            console.error('Error accepting friend request:', error);
+        });
+}
+
+firebase.auth().onAuthStateChanged(function(user) {
+    if (user) {
+        displayAvailableUsers();
+        displayFriendRequests();
+        displayFriends();
+    } else {
+        window.location.href = './index.html';
+    }
+});
+
+        </script>
+</body>
+
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+    <title>Add Expense</title>
+    <link rel="stylesheet" href="styles1.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Add Expense</h1>
+        </div>
+        <div class="expense-form">
+            <label for="amount">Amount:</label>
+            <input type="number" id="amount" placeholder="Enter amount" required>
+            <label for="splitOption">Split Option:</label>
+            <select id="splitOption">
+                <option value="percentage">Percentage</option>
+                <option value="custom">Custom Amount</option>
+            </select>
+            <div id="percentageInput" style="display: none;">
+                <label for="percentage">Percentage:</label>
+                <input type="number" id="percentage" placeholder="Enter percentage">
+                <div id="splitAmount"></div>
+            </div>
+            <div id="customInput" style="display: none;">
+                <label for="customAmount">Custom Amount:</label>
+                <input type="number" id="customAmount" placeholder="Enter custom amount">
+                <div id="remainingAmount"></div>
+                <div id="userShare"></div>
+
+            </div>
+            <label for="whoPaid">Who Paid:</label>
+            <select id="whoPaid">
+                <option value="user">You</option>
+                <option value="friend">Friend</option>
+                <div id="whoPaid"></div>
+            </select>
+            <button id="saveExpenseButton">Save Expense</button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
