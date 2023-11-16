@@ -1,132 +1,100 @@
 document.addEventListener('DOMContentLoaded', function() {
-const firebaseConfig = {
+  const firebaseConfig = {
     apiKey: "AIzaSyCZfnZbZIKR1zyywjrXJu0MJOjETO35aTE",
-        authDomain: "split-bill-6c19e.firebaseapp.com",
-        databaseURL: "https://split-bill-6c19e-default-rtdb.firebaseio.com",
-        projectId: "split-bill-6c19e",
-        storageBucket: "split-bill-6c19e.appspot.com",
-        messagingSenderId: "297198677510",
-        appId: "1:297198677510:web:9cec9889c3224da9735d87"
-    };
-    firebase.initializeApp(firebaseConfig);
-
-// Reference to the Firebase database
-const database = firebase.database();
-
-// Fetch user details from Firebase
-const usersRef = database.ref('users');
-const whoPaidSelect = document.getElementById('whoPaid');
-
-// Get friendId from the URL
-const urlParams = new URLSearchParams(window.location.search);
-const friendId = urlParams.get('friendId');
-
-// Get the authenticated user's ID
-let authUserId;
-firebase.auth().onAuthStateChanged((user) => {
-  if (user) {
-    authUserId = user.uid;
-  }
-});
-
-usersRef.once('value')
-  .then((snapshot) => {
-    snapshot.forEach((userSnapshot) => {
-      const userId = userSnapshot.key;
-      const userName = userSnapshot.child('details/name').val();
-
-      const option = document.createElement('option');
-      option.value = userId;
-      option.textContent = userName;
-      whoPaidSelect.appendChild(option);
-    });
-  })
-  .catch((error) => {
-    console.error('Error fetching user details:', error);
-  });
-
-// Event listener for the 'splitOption' select dropdown
-const splitOptionSelect = document.getElementById('splitOption');
-const percentageInput = document.getElementById('percentageInput');
-const customAmountInput = document.getElementById('customAmountInput');
-
-splitOptionSelect.addEventListener('change', () => {
-  const selectedOption = splitOptionSelect.value;
-  percentageInput.style.display = selectedOption === 'percentage' ? 'block' : 'none';
-  customAmountInput.style.display = selectedOption === 'custom' ? 'block' : 'none';
-});
-
-// Event listener for the 'Save Expense' button
-const saveExpenseButton = document.getElementById('saveExpenseButton');
-saveExpenseButton.addEventListener('click', () => {
-  // Get values from the form
-  const amount = parseFloat(document.getElementById('amount').value);
-  const splitOption = splitOptionSelect.value;
-  const percentage = parseFloat(document.getElementById('percentage').value) || 0;
-  const customAmount = parseFloat(document.getElementById('customAmount').value) || 0;
-  const whoPaid = whoPaidSelect.value;
-
-  // Perform necessary validations
-
-  // Calculate split amounts
-  let userAmount = 0;
-  let friendAmount = 0;
-
-  if (splitOption === 'equal') {
-    userAmount = amount / 2;
-    friendAmount = amount / 2;
-  } else if (splitOption === 'percentage') {
-    userAmount = (amount * percentage) / 100;
-    friendAmount = amount - userAmount;
-  } else if (splitOption === 'custom') {
-    userAmount = customAmount;
-    friendAmount = amount - userAmount;
-  }
-
-  // Prepare data to be saved to the database
-  const expenseData = {
-    amount,
-    splitOption,
-    percentage,
-    customAmount,
-    whoPaid,
-    userAmount,
-    friendAmount,
-    timestamp: firebase.database.ServerValue.TIMESTAMP,
+    authDomain: "split-bill-6c19e.firebaseapp.com",
+    databaseURL: "https://split-bill-6c19e-default-rtdb.firebaseio.com",
+    projectId: "split-bill-6c19e",
+    storageBucket: "split-bill-6c19e.appspot.com",
+    messagingSenderId: "297198677510",
+    appId: "1:297198677510:web:9cec9889c3224da9735d87"
   };
+  firebase.initializeApp(firebaseConfig);
 
-  // Save data to the Firebase database under the 'expenses' node
-  const expenseRef = database.ref('expenses');
-  const newExpenseRef = expenseRef.push(expenseData);
+    const auth = firebase.auth();
+    let currentUser;
 
-  // Save data to the authenticated user's transaction history
-  const userExpensesRef = database.ref(`users/${authUserId}/transactions`);
-  userExpensesRef.push({
-    expenseId: newExpenseRef.key,
-    amount: userAmount,
-    totalAmount: amount,
-    splitOption,
-    percentage,
-    customAmount,
-    whoPaid,
-    friendAmount,
-    timestamp: firebase.database.ServerValue.TIMESTAMP,
-  });
+    // Listen for changes in the authentication state
+    auth.onAuthStateChanged(function (user) {
+        if (user) {
+            // User is signed in
+            currentUser = user;
+            document.getElementById("currentUserName").innerText = `Current User: ${currentUser.displayName}`;
+        } else {
+            // No user is signed in
+            console.log("User not logged in");
+            // Redirect to the login page or handle the scenario accordingly
+        }
+    });
 
-  // Save data to the friend's transaction history
-  const friendExpensesRef = database.ref(`users/${friendId}/transactions`);
-  friendExpensesRef.push({
-    expenseId: newExpenseRef.key,
-    amount: friendAmount,
-    totalAmount: amount,
-    splitOption,
-    percentage,
-    customAmount,
-    whoPaid,
-    userAmount,
-    timestamp: firebase.database.ServerValue.TIMESTAMP,
-  });
+    // Fetch friend name from URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const friendId = urlParams.get("friendId");
 
-  console.log('Expense and transactions saved successfully!');
+// Function to fetch friend name from the database based on friendId
+async function fetchFriendName(friendId) {
+  try {
+      const userSnapshot = await firebase.database().ref(`users/${friendId}/details`).once("value");
+      const friendName = userSnapshot.val().name;
+      return friendName; // Return a default value if friendName is undefined
+  } catch (error) {
+      throw error;
+  }
+}
+
+    // Dynamically update Split Option input fields
+    const splitOptionDropdown = document.getElementById("splitOption");
+    const percentageInput = document.getElementById("percentageInput");
+    const customAmountInput = document.getElementById("customAmountInput");
+
+    splitOptionDropdown.addEventListener("change", function () {
+        const selectedOption = splitOptionDropdown.value;
+
+        if (selectedOption === "percentage") {
+            percentageInput.style.display = "block";
+            customAmountInput.style.display = "none";
+        } else if (selectedOption === "custom") {
+            percentageInput.style.display = "none";
+            customAmountInput.style.display = "block";
+        } else {
+            percentageInput.style.display = "none";
+            customAmountInput.style.display = "none";
+        }
+    });
+
+// Save expense to the database
+document.getElementById("saveExpenseButton").addEventListener("click", function () {
+  const name = document.getElementById("name").value;
+  const amount = parseFloat(document.getElementById("amount").value);
+  const splitOption = document.getElementById("splitOption").value;
+  const percentage = parseFloat(document.getElementById("percentage").value) || 0;
+  const customAmount = parseFloat(document.getElementById("customAmount").value) || 0;
+  const whoPaid = document.getElementById("whoPaid").value;
+
+  // Create a unique split ID
+  const splitId = generateSplitId();
+
+  // Save split details
+  saveSplitDetails(currentUser.uid, currentUser.displayName, friendId, name, whoPaid, amount, splitOption, percentage, customAmount, splitId);
 });
+
+// Function to save split details
+function saveSplitDetails(userId, userName, friendId, name, whoPaid, amount, splitOption, percentage, customAmount, splitId) {
+  const splitRef = firebase.database().ref(`splits/${splitId}`);
+  splitRef.set({
+      userId1: userId,
+      userName1: userName,
+      userId2: friendId,
+      userName2: name, // Assuming 'name' is the friend's name
+      whoPaid: whoPaid === 'me' ? userName : name, // Use the appropriate username
+      amount: amount,
+      splitOption: splitOption,
+      percentage: percentage,
+      customAmount: customAmount
+  });
+}
+
+    // Function to generate a unique split ID (you can customize this function based on your needs)
+    function generateSplitId() {
+        return firebase.database().ref("splits").push().key;
+    }
 });

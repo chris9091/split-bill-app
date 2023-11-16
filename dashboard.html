@@ -25,35 +25,17 @@
         <br>
         <br>
         <section class="kpi-container">
-            <div class="kpi-box expense" id="expense-section" style="display: none;">
-                <h3> Expense</h3>
-                <p id="expense-amount" class="currency-inr">₹ 0.00</p>
-            </div>
-            
-            <div class="kpi-box income" id="income-section" style="display: none;">
-                <h3> Income</h3>
-                <p id="income-amount" class="currency-inr">₹ 0.00</p>
-            </div>
             
             <div class="kpi-box balance" id="balance-section">
                 <h3> Balance</h3>
                 <p id="balance-amount" class="currency-inr">₹ 0.00</p>
+
     
 <button class="arrow-button" id="balance-button">
     <svg viewBox="0 0 320 512" height="1em" xmlns="http://www.w3.org/2000/svg" class="chevron-right">
     <path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path>
 </svg>
 </button>
-<button class="arrow-button" id="expense-button">
-<svg viewBox="0 0 320 512" height="1em" xmlns="http://www.w3.org/2000/svg" class="chevron-right">
-    <path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path>
-</svg>
-</button>
-<button class="arrow-button" id="income-button">
-<svg viewBox="0 0 320 512" height="1em" xmlns="http://www.w3.org/2000/svg" class="chevron-right">
-    <path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path>
-</svg>
-</button> 
 
   </div>
             </div>            
@@ -118,104 +100,6 @@ var firebaseConfig = {
   appId: "1:297198677510:web:9cec9889c3224da9735d87"
 };
     firebase.initializeApp(firebaseConfig);
-
-// Reference to the Firebase database
-const database = firebase.database();
-
-// Get the authenticated user's ID
-let authUserId;
-firebase.auth().onAuthStateChanged((user) => {
-  if (user) {
-    authUserId = user.uid;
-    displayLatestTransactions();
-  }
-});
-
-// Function to display the latest transactions
-function displayLatestTransactions() {
-  // Reference to the user's transaction history
-  const userTransactionsRef = database.ref(`users/${authUserId}/transactions`);
-
-  // Get the latest transactions (limit to, for example, 5)
-  userTransactionsRef.orderByChild('timestamp').limitToLast(5).once('value')
-    .then((snapshot) => {
-      const historyTableBody = document.getElementById('history-table-body');
-      historyTableBody.innerHTML = ''; // Clear existing entries
-
-      snapshot.forEach((transactionSnapshot) => {
-        const transactionData = transactionSnapshot.val();
-
-        // Get the friend's name who paid
-        const whoPaidUserId = transactionData.whoPaid;
-        const whoPaidNamePromise = getUserName(whoPaidUserId);
-
-        whoPaidNamePromise.then((whoPaidName) => {
-          const date = new Date(transactionData.timestamp);
-          const formattedDate = formatDate(date);
-          const formattedTime = formatTime(date);
-
-          // Calculate if the user owes or is owed
-          const isOwe = authUserId === whoPaidUserId;
-          const amountText = isOwe ? `You owe: ₹${transactionData.amount}` : `You are owed: ₹${transactionData.amount}`;
-
-          // Determine text color (red for owe, green for owed)
-          const textColor = isOwe ? 'red' : 'green';
-
-          // Create HTML elements for each transaction entry
-          const transactionEntry = document.createElement('div');
-          transactionEntry.classList.add('history-entry');
-
-          transactionEntry.innerHTML = `
-            <p><strong></strong> ${formattedDate}</p>
-            <p><strong></strong> ${formattedTime}</p>
-            <p><strong>Split with:</strong> ${whoPaidName}</p>
-            <p style="color: ${textColor};"><strong>${amountText}</strong></p>
-          `;
-
-          // Add click event to show detailed transaction information
-          transactionEntry.addEventListener('click', () => {
-            showDetailedTransaction(transactionData, whoPaidName);
-          });
-
-          // Append the transaction entry to the history table body
-          historyTableBody.appendChild(transactionEntry);
-        });
-      });
-    })
-    .catch((error) => {
-      console.error('Error fetching transactions:', error);
-    });
-}
-
-// Function to get the user's name from the user's ID
-function getUserName(userId) {
-  return database.ref(`users/${userId}/details/name`).once('value')
-    .then((snapshot) => snapshot.val())
-    .catch((error) => {
-      console.error('Error fetching user name:', error);
-      return 'Unknown';
-    });
-}
-
-// Function to show detailed transaction information
-function showDetailedTransaction(transactionData, whoPaidName) {
-  // Placeholder - customize this function to display detailed transaction information
-  console.log('Detailed transaction information:', transactionData, whoPaidName);
-  // You can use a modal or update another section of your page to display details
-}
-
-// Function to format date (e.g., 16 Nov '23)
-function formatDate(date) {
-  const options = { day: 'numeric', month: 'short', year: '2-digit' };
-  return new Intl.DateTimeFormat('en-US', options).format(date);
-}
-
-// Function to format time (e.g., 2:00 PM)
-function formatTime(date) {
-  const options = { hour: 'numeric', minute: 'numeric', hour12: true };
-  return new Intl.DateTimeFormat('en-US', options).format(date);
-}
-
 
 
 // Get the logout button and the popup elements
