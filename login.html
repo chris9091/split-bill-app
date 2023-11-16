@@ -44,23 +44,18 @@
         }
 
         .custom-select {
-            position: relative;
-            width: 100%;
-            margin-bottom: 10px;
-        }
+    position: relative;
+    margin-left: -18px;
+    width: calc(100% + 8px);
+    margin-bottom: 10px;
+}
+
 
         .custom-select select {
             display: none;
         }
 
-        .custom-select:after {
-            content: "\25BC";
-            font-size: 16px;
-            color: #F8861E;
-            position: absolute;
-            top: 12px;
-            right: 10px;
-        }
+
 
         .custom-select select {
             display: none;
@@ -106,11 +101,6 @@
             background: #F8861E;
         }
 
-        .custom-select {
-            display: flex;
-            flex-wrap: wrap;
-        }
-
         #percentageInput,
         #customAmountInput {
             display: none;
@@ -150,10 +140,14 @@
         }
 
         #homeButton {
-            width: calc(100% - 44px);
-            bottom: 2%;
-            left: 10px;
-        }
+    width: calc(100% - 44px);
+    bottom: 2%;
+    left: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 
         #backButton {
             top: 10px;
@@ -165,6 +159,10 @@
 </head>
 
 <body>
+    <br>
+    <br>
+    <br>
+
     <h1>SPLIT with friends</h1>
 
     <div>
