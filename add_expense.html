@@ -4,128 +4,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Loki Tempad</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <title>SPLIT</title>
     <style>
         body {
+            font-family: 'Press Start 2P', cursive;
+            background-color: #000;
+            color: #F8861E;
+            padding: 10px;
             margin: 0;
-            padding: 0;
-            background-color: #151515;
-            color: #ffffff;
-            font-family: 'Arial', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
         }
 
         h1 {
-            font-size: 36px;
+            text-align: center;
+            font-size: 24px;
             margin-bottom: 20px;
+            text-transform: uppercase;
         }
 
         div {
+            margin: 10px;
             position: relative;
-            width: 90%;
-            max-width: 500px;
-            margin: 0 auto;
-            border: 4px #F8861E solid;
-            overflow: hidden;
-            padding: 20px;
-            box-sizing: border-box;
-            background: url('https://via.placeholder.com/758x345') center/cover no-repeat;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
         }
 
         label {
-            color: #F8861E;
-            font-size: 18px;
+            display: block;
             margin-bottom: 5px;
         }
 
         input,
         select {
-            width: 100%;
-            padding: 12px;
+            width: calc(100% - 20px);
+            padding: 8px;
+            margin-bottom: 10px;
             box-sizing: border-box;
-            background-color: #151515;
-            color: #ffffff;
+            background-color: #000;
+            color: #F8861E;
             border: 2px solid #F8861E;
-            border-radius: 5px;
-            appearance: none;
-            background-image: url('https://via.placeholder.com/20x20');
-            background-position: 95% 50%;
-            background-repeat: no-repeat;
-            font-size: 16px;
         }
 
-        select {
-            padding-right: 40px;
+        #percentageInput,
+        #customAmountInput {
+            display: none;
         }
 
-        input:focus,
-        select:focus {
-            outline: none;
-            border-color: #D1550C;
-            box-shadow: 0 0 5px #D1550C;
+        div p {
+            margin-top: 0;
         }
 
-        button {
-            padding: 15px;
+        #splitAmount,
+        #remainingAmount,
+        #whoPaid {
+            font-weight: bold;
+        }
+
+        #saveExpenseButton {
             background-color: #F8861E;
-            color: #151515;
+            color: #0D1116;
+            padding: 10px;
             border: none;
-            border-radius: 5px;
             cursor: pointer;
-            font-size: 18px;
-        }
-
-        button:hover {
-            background-color: #D1550C;
+            width: calc(100% - 20px);
+            font-size: 16px;
+            font-weight: bold;
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
         }
 
         .navbar {
             display: flex;
             justify-content: space-between;
-            width: 90%;
-            max-width: 500px;
-            margin: 20px auto 0;
+            margin-top: 20px;
         }
 
         .navbar a {
-            color: #F8861E;
             text-decoration: none;
-            font-size: 18px;
+            color: #F8861E;
             padding: 10px;
             border: 2px solid #F8861E;
             border-radius: 5px;
-            transition: background-color 0.3s ease-in-out;
-        }
-
-        .navbar a:hover {
-            background-color: #D1550C;
-        }
-
-        @media (max-width: 600px) {
-            div {
-                width: 90%;
-            }
-
-            .navbar {
-                width: 90%;
-            }
+            font-weight: bold;
         }
     </style>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
 </head>
 
 <body>
-    <h1>SPLIT</h1>
 
     <div>
-        <h2>User Details</h2>
+        <br>
+        <br>
+        <br>
+
         <p id="currentUserName"></p>
         <p id="friendUserName"></p>
 
@@ -142,12 +113,12 @@
             <option value="custom">Custom Split</option>
         </select>
 
-        <div id="percentageInput" style="display: none;">
+        <div id="percentageInput">
             <label for="percentage">Percentage (%):</label>
             <input type="number" id="percentage" />
         </div>
 
-        <div id="customAmountInput" style="display: none;">
+        <div id="customAmountInput">
             <label for="customAmount">Custom Amount (₹):</label>
             <input type="number" id="customAmount" />
         </div>
@@ -163,8 +134,6 @@
             <p id="remainingAmount"></p>
             <p id="whoPaid"></p>
         </div>
-
-        <button id="saveExpenseButton">Save Expense</button>
     </div>
 
     <!-- Navigation Bar -->
@@ -173,6 +142,7 @@
         <a href="#">Back</a>
     </div>
 
+    <button id="saveExpenseButton">Save Expense</button>
 </body>
 
 </html>
