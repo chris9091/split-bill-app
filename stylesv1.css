@@ -38,7 +38,6 @@
   
   /* Style the container for the dashboard */
   .container {
-    flex: 1;
       max-width: 800px;
       margin: 0 auto;
       padding: 20px;

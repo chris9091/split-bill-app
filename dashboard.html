@@ -151,11 +151,12 @@ function displayLatestTransactions() {
 
         whoPaidNamePromise.then((whoPaidName) => {
           const date = new Date(transactionData.timestamp);
-          const formattedDate = date.toLocaleString(); // Adjust the format as needed
+          const formattedDate = formatDate(date);
+          const formattedTime = formatTime(date);
 
           // Calculate if the user owes or is owed
           const isOwe = authUserId === whoPaidUserId;
-          const amountText = isOwe ? `You owe: ${transactionData.amount} INR` : `You are owed: ${transactionData.amount} INR`;
+          const amountText = isOwe ? `You owe: ₹${transactionData.amount}` : `You are owed: ₹${transactionData.amount}`;
 
           // Determine text color (red for owe, green for owed)
           const textColor = isOwe ? 'red' : 'green';
@@ -166,6 +167,8 @@ function displayLatestTransactions() {
 
           transactionEntry.innerHTML = `
             <p><strong></strong> ${formattedDate}</p>
+            <p><strong></strong> ${formattedTime}</p>
+            <p><strong>Split with:</strong> ${whoPaidName}</p>
             <p style="color: ${textColor};"><strong>${amountText}</strong></p>
           `;
 
@@ -196,12 +199,22 @@ function getUserName(userId) {
 
 // Function to show detailed transaction information
 function showDetailedTransaction(transactionData, whoPaidName) {
-  // Customize this function to display detailed transaction information
+  // Placeholder - customize this function to display detailed transaction information
   console.log('Detailed transaction information:', transactionData, whoPaidName);
   // You can use a modal or update another section of your page to display details
 }
 
+// Function to format date (e.g., 16 Nov '23)
+function formatDate(date) {
+  const options = { day: 'numeric', month: 'short', year: '2-digit' };
+  return new Intl.DateTimeFormat('en-US', options).format(date);
+}
 
+// Function to format time (e.g., 2:00 PM)
+function formatTime(date) {
+  const options = { hour: 'numeric', minute: 'numeric', hour12: true };
+  return new Intl.DateTimeFormat('en-US', options).format(date);
+}
 
 
 
