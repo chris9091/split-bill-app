@@ -1,7 +1,6 @@
-document.addEventListener('DOMContentLoaded', async function () {
-    // Your Firebase configuration
-    var firebaseConfig = {
-        apiKey: "AIzaSyCZfnZbZIKR1zyywjrXJu0MJOjETO35aTE",
+document.addEventListener('DOMContentLoaded', function() {
+const firebaseConfig = {
+    apiKey: "AIzaSyCZfnZbZIKR1zyywjrXJu0MJOjETO35aTE",
         authDomain: "split-bill-6c19e.firebaseapp.com",
         databaseURL: "https://split-bill-6c19e-default-rtdb.firebaseio.com",
         projectId: "split-bill-6c19e",
@@ -9,205 +8,125 @@ document.addEventListener('DOMContentLoaded', async function () {
         messagingSenderId: "297198677510",
         appId: "1:297198677510:web:9cec9889c3224da9735d87"
     };
+    firebase.initializeApp(firebaseConfig);
 
-    // Initialize Firebase
-    await initializeFirebase(firebaseConfig);
+// Reference to the Firebase database
+const database = firebase.database();
 
-    // Check if user is authenticated
-    const user = await getCurrentUser();
-    if (!user) {
-        console.error('Error: User not authenticated.');
-        // You may redirect the user to the login page or take appropriate action.
-        return;
-    }
-// Get user names from the database
-function getUserNames(callback) {
-    // Fetch user names from Firebase
-    var usersRef = firebase.database().ref('users');
-    usersRef.once('value')
-        .then(function (snapshot) {
-            var userNames = [];
-            snapshot.forEach(function (userSnapshot) {
-                var userName = userSnapshot.child('details/name').val();
-                userNames.push(userName);
-            });
-            callback(userNames);
-        })
-        .catch(function (error) {
-            console.error('Error fetching user names from Firebase:', error);
-            callback([]); // Provide an empty array if there's an error
-        });
-}
+// Fetch user details from Firebase
+const usersRef = database.ref('users');
+const whoPaidSelect = document.getElementById('whoPaid');
 
+// Get friendId from the URL
+const urlParams = new URLSearchParams(window.location.search);
+const friendId = urlParams.get('friendId');
 
-    // DOM elements
-    var amountInput = document.getElementById('amount');
-    var splitOptionSelect = document.getElementById('splitOption');
-    var percentageInput = document.getElementById('percentage');
-    var customAmountInput = document.getElementById('customAmount');
-    var whoPaidSelect = document.getElementById('whoPaid');
-    var saveExpenseButton = document.getElementById('saveExpenseButton');
-    var splitAmountElement = document.getElementById('splitAmount');
-    var remainingAmountElement = document.getElementById('remainingAmount');
-    var whoPaidElement = document.getElementById('whoPaid');
-    var currentUserNameElement = document.getElementById('currentUserName');
-    var friendUserNameElement = document.getElementById('friendUserName');
-    var percentageInputDiv = document.getElementById('percentageInput');
-    var customAmountInputDiv = document.getElementById('customAmountInput');
+// Get the authenticated user's ID
+let authUserId;
+firebase.auth().onAuthStateChanged((user) => {
+  if (user) {
+    authUserId = user.uid;
+  }
+});
 
-    // Get user ID and friend ID from the URL parameters
-    var urlParams = new URLSearchParams(window.location.search);
-    var friendId = urlParams.get('friendId');
-    var userId = user.uid;
+usersRef.once('value')
+  .then((snapshot) => {
+    snapshot.forEach((userSnapshot) => {
+      const userId = userSnapshot.key;
+      const userName = userSnapshot.child('details/name').val();
 
-    // Fetch and display user names
-    var currentUserRef = firebase.database().ref('users/' + userId + '/details/name');
-    currentUserRef.once('value', function (snapshot) {
-        console.log('Firebase Data Snapshot:', snapshot.val()); // Log the snapshot value
-        var currentUserName = snapshot.val();
-
-        if (currentUserName !== null) {
-            currentUserNameElement.textContent = `Your Name: ${currentUserName}`;
-            currentUserNameElement.style.display = 'block';
-        } else {
-            console.error('Error: User name not found in Firebase.');
-        }
+      const option = document.createElement('option');
+      option.value = userId;
+      option.textContent = userName;
+      whoPaidSelect.appendChild(option);
     });
+  })
+  .catch((error) => {
+    console.error('Error fetching user details:', error);
+  });
 
-    var friendRef = firebase.database().ref('users').child(friendId).child('details').child('name');
-    friendRef.once('value', function (snapshot) {
-        var friendName = snapshot.val();
-        friendUserNameElement.textContent = `Friend's Name: ${friendName}`;
-        friendUserNameElement.style.display = 'block';
+// Event listener for the 'splitOption' select dropdown
+const splitOptionSelect = document.getElementById('splitOption');
+const percentageInput = document.getElementById('percentageInput');
+const customAmountInput = document.getElementById('customAmountInput');
 
-        // Now, populate the dropdown with user names
-        getUserNames(function (userNames) {
-            // Clear existing options in the dropdown
-            whoPaidSelect.innerHTML = "";
-
-            // Populate the dropdown with user names
-            userNames.forEach(function (name, index) {
-                var option = document.createElement('option');
-                option.value = index; // Use a unique identifier
-                option.text = name;
-                whoPaidSelect.add(option);
-            });
-        });
-
-        // Add event listener to the "Who Paid" dropdown
-        whoPaidSelect.addEventListener('change', function () {
-            updateShare();
-        });
-    });
-
-    // Function to populate "Who Paid" dropdown
-function populateWhoPaidDropdown(userNames) {
-    var whoPaidDropdown = document.getElementById('whoPaid');
-
-    userNames.forEach(function (name, index) {
-        var option = document.createElement('option');
-        option.value = index; // Use a unique identifier
-        option.text = name;
-        whoPaidDropdown.add(option);
-    });
-}
-
-
-// Function to update share based on user input
-function updateShare() {
-    var amount = parseFloat(amountInput.value) || 0;
-    var selectedOption = splitOptionSelect.value;
-    var percentage = parseFloat(percentageInput.value) || 0;
-    var customAmount = parseFloat(customAmountInput.value) || 0;
-
-    if (isNaN(amount) || amount <= 0) {
-        console.error('Error: Invalid amount.');
-        return;
-    }
-
-    var shareAmount;
-    if (selectedOption === 'percentage') {
-        shareAmount = (amount * (percentage / 100)).toFixed(2);
-    } else if (selectedOption === 'custom') {
-        shareAmount = customAmount.toFixed(2);
-    } else {
-        shareAmount = (amount / 2).toFixed(2);
-    }
-
-    splitAmountElement.textContent = `Your Share: ₹${shareAmount}`;
-    remainingAmountElement.textContent = `Friend's Share: ₹${(amount - shareAmount).toFixed(2)}`;
-
-    // Check if whoPaidSelect has options before updating the dropdown
-    if (whoPaidSelect.options.length > 0) {
-        whoPaidElement.textContent = `Paid by: ${whoPaidSelect.options[whoPaidSelect.selectedIndex].text}`;
-    } else {
-        console.error('Error: whoPaidSelect has no options.');
-    }
-}
-
-// Update share when amount or options change
-amountInput.addEventListener('input', function () {
-    updateShare();
+splitOptionSelect.addEventListener('change', () => {
+  const selectedOption = splitOptionSelect.value;
+  percentageInput.style.display = selectedOption === 'percentage' ? 'block' : 'none';
+  customAmountInput.style.display = selectedOption === 'custom' ? 'block' : 'none';
 });
 
-splitOptionSelect.addEventListener('change', function () {
-    var splitOption = this.value;
-    toggleSplitOptions(splitOption);
-    updateShare(); // Update the share immediately after changing the split option
+// Event listener for the 'Save Expense' button
+const saveExpenseButton = document.getElementById('saveExpenseButton');
+saveExpenseButton.addEventListener('click', () => {
+  // Get values from the form
+  const amount = parseFloat(document.getElementById('amount').value);
+  const splitOption = splitOptionSelect.value;
+  const percentage = parseFloat(document.getElementById('percentage').value) || 0;
+  const customAmount = parseFloat(document.getElementById('customAmount').value) || 0;
+  const whoPaid = whoPaidSelect.value;
+
+  // Perform necessary validations
+
+  // Calculate split amounts
+  let userAmount = 0;
+  let friendAmount = 0;
+
+  if (splitOption === 'equal') {
+    userAmount = amount / 2;
+    friendAmount = amount / 2;
+  } else if (splitOption === 'percentage') {
+    userAmount = (amount * percentage) / 100;
+    friendAmount = amount - userAmount;
+  } else if (splitOption === 'custom') {
+    userAmount = customAmount;
+    friendAmount = amount - userAmount;
+  }
+
+  // Prepare data to be saved to the database
+  const expenseData = {
+    amount,
+    splitOption,
+    percentage,
+    customAmount,
+    whoPaid,
+    userAmount,
+    friendAmount,
+    timestamp: firebase.database.ServerValue.TIMESTAMP,
+  };
+
+  // Save data to the Firebase database under the 'expenses' node
+  const expenseRef = database.ref('expenses');
+  const newExpenseRef = expenseRef.push(expenseData);
+
+  // Save data to the authenticated user's transaction history
+  const userExpensesRef = database.ref(`users/${authUserId}/transactions`);
+  userExpensesRef.push({
+    expenseId: newExpenseRef.key,
+    amount: userAmount,
+    totalAmount: amount,
+    splitOption,
+    percentage,
+    customAmount,
+    whoPaid,
+    friendAmount,
+    timestamp: firebase.database.ServerValue.TIMESTAMP,
+  });
+
+  // Save data to the friend's transaction history
+  const friendExpensesRef = database.ref(`users/${friendId}/transactions`);
+  friendExpensesRef.push({
+    expenseId: newExpenseRef.key,
+    amount: friendAmount,
+    totalAmount: amount,
+    splitOption,
+    percentage,
+    customAmount,
+    whoPaid,
+    userAmount,
+    timestamp: firebase.database.ServerValue.TIMESTAMP,
+  });
+
+  console.log('Expense and transactions saved successfully!');
 });
-
-percentageInput.addEventListener('input', function () {
-    updateShare();
-});
-
-customAmountInput.addEventListener('input', function () {
-    updateShare();
-});
-
-// Add event listener to the "Who Paid" dropdown
-whoPaidSelect.addEventListener('change', function () {
-    updateShare();
-});
-
-
-
-
-
-    
-    // Save expense to the database
-    saveExpenseButton.addEventListener('click', function () {
-        // Your existing code
-
-        // Save data to the database
-        var expenseData = {
-            // Include relevant data here
-        };
-
-        // Assuming you have a function to save data to the database
-        saveExpenseToDatabase(expenseData);
-    });
-
-    // Function to save data to the database
-    function saveExpenseToDatabase(expenseData) {
-        // Implement saving data to the database
-        // Example:
-        var expensesRef = firebase.database().ref('expenses');
-        expensesRef.push(expenseData);
-    }
-
-    // Function to initialize Firebase
-    async function initializeFirebase(config) {
-        if (!firebase.apps.length) {
-            await firebase.initializeApp(config);
-        }
-    }
-
-    // Function to get the current authenticated user
-    async function getCurrentUser() {
-        return new Promise((resolve) => {
-            firebase.auth().onAuthStateChanged((user) => {
-                resolve(user);
-            });
-        });
-    }
 });

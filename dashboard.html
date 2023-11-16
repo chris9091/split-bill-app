@@ -88,61 +88,6 @@
         <a href="./profile.html" class="nav-item"><i class="fas fa-user"></i><span>Profile</span></a>
     </div>
     
-
-
-    <!-- Button to open the add expense/income popup
-    <div class="add-button" id="addButton">
-        <div class="add-button-text" >+ Add expense/income</div>
-</div>
-<a href="app://app.tsx?userId=${userId}">Auto Add</a> -->
-<!-- 
-    <div class="popup" id="popup">
-        <div class="popup-content">
-            <span class="close-button" id="close-popup">&times;</span>
-            <h2 class="popup-title" id="popup-title">Add Expense / Income 🙂</h2>
-            <div class="slide-toggle">
-                <button id="toggle-expense" class="toggle-button-1">Expense</button>
-                <button id="toggle-income" class="toggle-button-2">Income</button>                                          
-            </div>
-            <form id="popup-form">
-                <div class="form-group">
-                    <label for="amount">Amount (INR):</label>
-                    <input type="number" id="amount" name="amount" min="0.01" step="0.01" required>
-                </div>
-                <div class="form-group">
-                    <label for="date">Date:</label>
-                    <input type="date" id="date" name="date" required>
-                </div>
-                <div class="form-group">
-                    <label for="category">Category:</label>
-                    <select id="category" name="category">
-                        <option value="food">Food</option>
-                        <option value="grocery">Grocery</option>
-                        <option value="transport">Transport</option>
-                        <option value="utilities">Utilities</option>
-                        <option value="others">Others</option>
-                        <option value="others">Salary</option>
-                        <option value="others">Bonus</option>
-
-
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="account">Account:</label>
-                    <select id="account" name="account">
-                        <option value="cash">Cash</option>
-                        <option value="bank">Bank - Paytm</option>
-                        <option value="bank">Bank - Fi</option>
-                        <option value="credit">Credit Card</option>
-                        <option value="wallet">Digital Wallet</option>
-                        <option value="wallet">Savings</option>
-                    </select>
-                </div>
-                <button type="submit" id="add-button">Add</button>
-                <div id="add-message"></div>
-            </form>
-        </div>
-    </div> -->
 <!-- Logout Confirmation Popup -->
 <div class="popup" id="logoutPopup">
     <div class="popup-content1">
@@ -174,171 +119,59 @@ var firebaseConfig = {
 };
     firebase.initializeApp(firebaseConfig);
 
-    // Initialize userId variable in a higher scope
-let userId = null;
+// Reference to the Firebase database
+const database = firebase.database();
 
-    // Check if the user is signed in
-    firebase.auth().onAuthStateChanged(function (user) {
-    if (user) {
-        userId = user.uid; // Make sure this line is executed properly
-        console.log('User ID:', userId); // Log the user ID to debug
-
-        if (userId) {
-            // Display transactions when the user is signed in
-            displayTransactions(userId);
-// Get the last 4 characters of the user ID
-const truncatedUserId = userId.slice(-4);
-
-// Display the last 4 digits of the user ID
-document.getElementById('user-id').textContent = ` ${truncatedUserId}`;
-        } else {
-            // console.error('User ID is null.');
-        }
-    } else {
-        // Redirect to login if the user is not signed in
-        window.location.href = '../index.html';
-    }
+// Get the authenticated user's ID
+let authUserId;
+firebase.auth().onAuthStateChanged((user) => {
+  if (user) {
+    authUserId = user.uid;
+    displayLatestTransactions();
+  }
 });
 
+// Function to display the latest transactions
+function displayLatestTransactions() {
+  // Reference to the user's transaction history
+  const userTransactionsRef = database.ref(`users/${authUserId}/transactions`);
 
+  // Get the latest transactions (limit to, for example, 5)
+  userTransactionsRef.orderByChild('timestamp').limitToLast(5).once('value')
+    .then((snapshot) => {
+      const historyTableBody = document.getElementById('history-table-body');
+      historyTableBody.innerHTML = ''; // Clear existing entries
 
-function displayTransactions(userId) {
-    const userRef = firebase.database().ref('users/' + userId);
-    const historyTableBody = document.getElementById('history-table-body');
-    let totalExpense = 0;
-    let totalIncome = 0;
+      snapshot.forEach((transactionSnapshot) => {
+        const transactionData = transactionSnapshot.val();
 
-    userRef.child('income').on('child_added', function (incomeChildSnapshot) {
-        var incomeData = incomeChildSnapshot.val();
-        incomeData.date = new Date(incomeData.date);
-        incomeData.type = 'Income';
-        addTransactionRow(incomeData);
-        totalIncome += incomeData.amount;
-        updateKPIs(totalIncome, totalExpense);
+        // Create HTML elements for each transaction entry
+        const transactionEntry = document.createElement('div');
+        transactionEntry.classList.add('history-entry');
+
+        const date = new Date(transactionData.timestamp);
+        const formattedDate = date.toLocaleString(); // Adjust the format as needed
+
+        transactionEntry.innerHTML = `
+          <p><strong>Amount:</strong> ${transactionData.amount} INR</p>
+          <p><strong>Total Amount:</strong> ${transactionData.totalAmount} INR</p>
+          <p><strong>Split Option:</strong> ${transactionData.splitOption}</p>
+          <p><strong>Percentage:</strong> ${transactionData.percentage}%</p>
+          <p><strong>Custom Amount:</strong> ${transactionData.customAmount} INR</p>
+          <p><strong>Who Paid:</strong> ${transactionData.whoPaid}</p>
+          <p><strong>User's Share:</strong> ${transactionData.userAmount} INR</p>
+          <p><strong>Friend's Share:</strong> ${transactionData.friendAmount} INR</p>
+          <p><strong>Timestamp:</strong> ${formattedDate}</p>
+        `;
+
+        // Append the transaction entry to the history table body
+        historyTableBody.appendChild(transactionEntry);
+      });
+    })
+    .catch((error) => {
+      console.error('Error fetching transactions:', error);
     });
-
-    userRef.child('expenses').on('child_added', function (expenseChildSnapshot) {
-        var expenseData = expenseChildSnapshot.val();
-        expenseData.date = new Date(expenseData.date);
-        expenseData.type = 'Expense';
-        addTransactionRow(expenseData);
-        totalExpense += expenseData.amount;
-        updateKPIs(totalIncome, totalExpense);
-    });
-
-    function addTransactionRow(data) {
-    var historyEntry = document.createElement('div');
-    historyEntry.className = 'history-entry ' + data.type.toLowerCase();
-    var amount = data.type.toLowerCase() === 'expense' ? -data.amount : data.amount;
-
-     // Determine the sign and color based on the transaction type
-     var sign = data.type.toLowerCase() === 'income' ? '+' : '-'; 
-    var color = data.type.toLowerCase() === 'income' ? 'green' : 'red';
-
-    historyEntry.innerHTML = `
-        <div class="icon ${data.type.toLowerCase()}"></div>
-        <div class="details">
-            <div class="category">${data.category}</div>
-            <div class="date">${formatDate(data.date)}</div>
-        </div>
-        <div class="amount currency-inr" style="color: ${color};">${sign} ${Math.abs(amount).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
-    `;
-    // Insert the new transaction row at the beginning of the history table
-    historyTableBody.insertBefore(historyEntry, historyTableBody.firstChild);
 }
-
-    
-    // Function to update KPIs
-function updateKPIs(totalIncome, totalExpense) {
-
-
-
-    // Calculate and update the balance
-    const balance = totalIncome - Math.abs(totalExpense);
-    // console.log('Calculated Balance:', balance);
-
-    // Update the balance element with the calculated balance
-    const balanceElement = document.getElementById('balance-amount');
-    balanceElement.textContent = `₹ ${balance.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
-
-     // Update the expense element with the total expense
-     const expenseElement = document.getElementById('expense-amount');
-    expenseElement.textContent = `₹ ${Math.abs(totalExpense).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
-
-         // Update the expense element with the total income
-         const incomeElement = document.getElementById('income-amount');
-    incomeElement.textContent = `₹ ${Math.abs(totalIncome).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
-
-    
-    // Log the totals after updating the KPIs
-    // console.log('Updated Total Income:', totalIncome, 'Updated Total Expense:', totalExpense);
-    // console.log('Calculated Balance:', balance);
-    } 
-    function formatDate(dateString) {
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            const formattedDate = new Date(dateString).toLocaleDateString('en-US', options);
-            return formattedDate;
-        }
-}
-
-//arrow button
-// Define the toggleSections function
-function toggleSections(sectionId) {
-    var sections = ['balance-section', 'expense-section', 'income-section'];
-    for (var i = 0; i < sections.length; i++) {
-        var section = document.getElementById(sections[i]);
-        console.log('Section ID:', sections[i]); // Log section ID
-        console.log('Section Element:', section); // Log section element
-        if (sections[i] === sectionId) {
-            section.style.display = 'block';
-        } else {
-            section.style.display = 'none';
-        }
-    }
-}
-// Attach the click event handlers to your buttons
-document.getElementById('balance-button').addEventListener('click', function() {
-    toggleSections('balance-section');
-});
-
-document.getElementById('expense-button').addEventListener('click', function() {
-    toggleSections('expense-section');
-});
-
-document.getElementById('income-button').addEventListener('click', function() {
-    toggleSections('income-section');
-});
-
-
-
-
-
-// Call the displayTransactions function to populate the transaction history
-displayTransactions(userId);
-
-
-// // Function to add a row to the transaction history
-// function addTransactionRow(type, data) {
-//     var historyEntriesContainer = document.querySelector('.history-entries-container');
-//     var historyEntry = document.createElement('div');
-//     historyEntry.className = 'history-entry';
-//     var amount = type.toLowerCase() === 'expense' ? -data.amount : data.amount; // Adjust amount for expenses
-    
-//     historyEntry.innerHTML = `
-//         <div class="icon ${type.toLowerCase()}"></div>
-//         <div class="details">
-//             <div class="category">${data.category}</div>
-//             <div class="date">${data.date}</div>
-//         </div>
-//         <div class="amount currency-inr">₹ ${Math.abs(amount).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
-//     `;
-//     var historyTableBody = document.getElementById('history-table-body');
-
-//     historyEntriesContainer.appendChild(historyEntry);
-// }
-
-// Call the displayTransactions function to populate the transaction history
-displayTransactions(userId);
 
 // Get the logout button and the popup elements
 const logoutButton = document.getElementById('logoutButton1'); // Updated ID
