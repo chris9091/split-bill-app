@@ -1,238 +1,293 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SPLIT</title>
-    <style>
-        body {
-            font-family: 'Press Start 2P', cursive;
-            background-color: #000;
-            color: #F8861E;
-            padding: 10px;
-            margin: 0;
-            overflow: hidden;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+  <title>Phone Verification</title>
+  <!-- Include Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+
+
+  <!-- Include Firebase config -->
+  <script>
+        var firebaseConfig = {
+            apiKey: "AIzaSyCZfnZbZIKR1zyywjrXJu0MJOjETO35aTE",
+  authDomain: "split-bill-6c19e.firebaseapp.com",
+  databaseURL: "https://split-bill-6c19e-default-rtdb.firebaseio.com",
+  projectId: "split-bill-6c19e",
+  storageBucket: "split-bill-6c19e.appspot.com",
+  messagingSenderId: "297198677510",
+  appId: "1:297198677510:web:9cec9889c3224da9735d87"
+};
+        firebase.initializeApp(firebaseConfig);
+        firebase.auth().onAuthStateChanged(function(user) {
+    if (user) {
+        // User is signed in, redirect to dashboard
+        window.location.href = './dashboard.html';
+    } else {
+        // User is not signed in, keep the phone verification flow as it is
+    }
+});
+
+    var confirmationResult;
+    var phoneNumber = "";
+    var captchaVerified = false;
+
+    function showPhoneNumberForm() {
+    // Show the phone number input form
+    document.querySelector('.input-container').style.display = 'block';
+  }
+
+    function showCaptcha() {
+        phoneNumber = document.getElementById('phoneNumber').value;
+
+        // Check if the phone number field is empty
+        if (!phoneNumber) {
+            alert("Please enter your phone number.");
+            return;
         }
 
-        h1 {
-            text-align: center;
-            font-size: 24px;
-            margin-bottom: 20px;
-            text-transform: uppercase;
+        // Add country code if missing
+        if (!phoneNumber.startsWith("+91")) {
+            phoneNumber = "+91" + phoneNumber;
         }
 
-        div {
-            margin: 10px;
-            position: relative;
+    // Hide the phone number form and show the captcha
+    document.querySelector('.input-container').style.display = 'none';
+    var appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container');
+    firebase.auth().signInWithPhoneNumber(phoneNumber, appVerifier)
+      .then(function(result) {
+        confirmationResult = result;
+        // Show the OTP input field and send OTP button
+        document.querySelector('.otp-fields').style.display = 'block';
+        document.getElementById('recaptcha-container').style.display = 'none';
+        document.querySelector('.send-otp-button').style.display = 'none'; // Hide send OTP button
+        captchaVerified = true; // Captcha is verified
+
+        // Log the login attempt to Firebase database
+        logLoginAttempt(phoneNumber, 'attempted');
+      })
+      .catch(function(error) {
+        console.error('Error sending OTP:', error);
+      });
+  }
+
+  function sendOTP() {
+    // Check if the captcha is verified
+    if (!captchaVerified) {
+      alert("Please complete the captcha verification.");
+      return;
+    }
+            // Send OTP logic here
+            var appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container');
+            firebase.auth().signInWithPhoneNumber(phoneNumber, appVerifier)
+                .then(function(result) {
+                    confirmationResult = result;
+                    // Show the OTP input field
+                    document.querySelector('.otp-fields').style.display = 'block';
+
+                    // Log the login attempt to Firebase database
+                    logLoginAttempt(phoneNumber, 'attempted');
+                })
+                .catch(function(error) {
+                    console.error('Error sending OTP:', error);
+                });
         }
 
-        label {
-            display: block;
-            margin-bottom: 5px;
-        }
+        function verifyOTP() {
+    var verificationCode = document.getElementById('verificationCode').value;
+    confirmationResult.confirm(verificationCode)
+        .then(function(result) {
+            // User signed in successfully, you can redirect to the dashboard here
+            var uid = result.user.uid; // Get the user's UID
+            window.location.href = './dashboard.html';
 
-        input,
-        select {
-            width: calc(100% - 20px);
-            padding: 8px;
-            margin-bottom: 10px;
-            box-sizing: border-box;
-            background-color: #000;
-            color: #F8861E;
-            border: 2px solid #F8861E;
-        }
+            // Store the phone number in the user's data
+            const userRef = firebase.database().ref(`users/${uid}/details`);
+            userRef.update({
+                phoneNumber: phoneNumber
+            });
 
-        .custom-select {
-    position: relative;
-    margin-left: -18px;
-    width: calc(100% + 8px);
-    margin-bottom: 10px;
+            // Call the updated logLoginAttempt function to log the attempt with UID
+            logLoginAttempt(uid, phoneNumber, 'attempted');
+        })
+        .catch(function(error) {
+            // Handle OTP verification error
+            console.error('OTP verification error:', error);
+        });
 }
 
+    function resendOTP() {
+      // Clear previous verification result and fields
+      confirmationResult = null;
+      document.getElementById('verificationCode').value = '';
 
-        .custom-select select {
-            display: none;
+
+            // Resend OTP logic here, similar to sendOTP()
+            sendOTP();
         }
 
-
-
-        .custom-select select {
-            display: none;
+        // Function to log login attempts to Firebase database
+        function logLoginAttempt(uid, phoneNumber, status) {
+            // Replace 'your_database_reference' with the actual reference to your Firebase database
+            var databaseRef = firebase.database().ref('login-logs');
+            var logEntry = {
+                timestamp: new Date().toString(),
+                uid: uid, // Add the UID to the log entry
+                phoneNumber: phoneNumber,
+                status: status
+            };
+            databaseRef.push(logEntry);
         }
+</script>
+    <style>
 
-        .custom-options {
-            max-height: 120px;
-            overflow: auto;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            border: 1px solid #F8861E;
-            border-top: none;
-            background: #000;
-            z-index: 999;
-            display: none;
-            border-radius: 0 0 5px 5px;
-            width: 100%; /* Set the width to 100% */
-        }
 
-        .custom-options.active {
-            display: block;
-        }
-
-        .custom-option {
-            position: relative;
-            display: block;
-            padding: 0 20px 0 10px;
-            font-size: 16px;
-            line-height: 40px;
-            cursor: pointer;
-            color: #F8861E;
-            transition: background .3s;
-        }
-
-        .custom-option:hover {
-            background: #F8861E;
-        }
-
-        .custom-option.selected {
-            color: #000;
-            background: #F8861E;
-        }
-
-        #percentageInput,
-        #customAmountInput {
-            display: none;
-        }
-
-        div p {
-            margin-top: 0;
-        }
-
-        #splitAmount,
-        #remainingAmount,
-        #whoPaid {
-            font-weight: bold;
-        }
-
-        #saveExpenseButton,
-        #homeButton,
-        #backButton {
-            text-decoration: none;
-            color: #F8861E;
-            padding: 10px;
-            border: 2px solid #F8861E;
-            border-radius: 5px;
-            font-weight: bold;
-            position: fixed;
-            cursor: pointer;
-        }
-
-        #saveExpenseButton {
-            background-color: #F8861E;
-            color: #0D1116;
-            width: calc(100% - 20px);
-            font-size: 16px;
-            bottom: 9%;
-            left: 10px;
-            right: 10px;
-        }
-
-        #homeButton {
-    width: calc(100% - 44px);
-    bottom: 2%;
-    left: 10px;
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-direction: column;
+    background-color: #000000;
+    color: white;
+    font-family: 'Press Start 2P', cursive;
 }
 
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    text-align: center;
+    padding: 10px;
+    justify-content: flex-start;
+    align-items: center;
+}
 
-        #backButton {
-            top: 10px;
-            left: 10px;
-        }
+.text-container {
+    height: 25%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.input-container {
+    height: 20%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.otp-fields {
+    margin-bottom: 60px;
+    width: 130%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.footer {
+    margin-top: auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Press Start 2P', cursive;
+
+}
+
+.button-container {
+    width: 100%; /* Set the width to 100% */
+    display: flex;
+    justify-content: space-around; /* Align buttons with equal space around them */
+    margin-bottom: 20px; /* Adjust margin for spacing */
+}
+
+.button-container button,
+.otp-fields button {
+    width: 100%; /* Set the width to 100% */
+    height: 46px;
+    background-color: #EEFF00;
+    color: #000000;
+    padding: 18px;
+    border: none;
+    border-radius: 13px;
+    cursor: pointer;
+    font-family: 'Press Start 2P', cursive;
+}
+
+.input {
+    width: calc(100% - 20px);
+    height: 46px;
+    padding: 0 10px;
+    border: none;
+    background-color: #161616;
+    border-radius: 10px;
+    color: #ffffff;
+    margin-bottom: 10px;
+}
+
+.input:hover,
+.input:focus {
+    border: 2px solid #4A9DEC;
+    box-shadow: 0px 0px 0px 7px rgba(74, 157, 236, 0.2);
+    background-color: #161616;
+}
+
+.text-xs {
+    font-size: 12px;
+    margin-top: 10px;
+}
+
+.highlighted-text {
+    color: #EEFF00;
+}
     </style>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
-</head>
+  </head>
+  <body>
+    <div class="container">
+      <div class="text-container">
+        <div class="text-4xl font-extrabold mb-6">Ku<span class="highlighted-text">DicK</span>Ka</div>
+        <div class="text-sm mb-8">Bigger than you think!</div>
+    </div>
+    
+        
+        <div class="input-container">
+            <input class="input" type="text" id="phoneNumber" inputmode="numeric" pattern="[0-9]*" placeholder="Enter Phone number" required style="font-family: 'press start 2p';">
+        </div>
+        <div id="recaptcha-container"></div>
+        <div class="button-container send-otp-button">
+            <button onclick="showCaptcha()"
+                class="w-full mb-500px py-2 bg-yellow-400 text-black font-semibold rounded cursor-pointer">Next</button>
+        </div>
 
-<body>
-    <br>
-    <br>
-    <br>
+        <div class="otp-fields hidden w-full">
+            <input type="text" id="verificationCode" inputmode="numeric" pattern="[0-9]*"
+                class="w-full mb-4 py-2 px-4 rounded bg-gray-900 border border-blue-400 text-white focus:outline-none"
+                placeholder="Enter OTP">
+            <button class="w-full py-2 bg-yellow-400 text-black font-semibold rounded cursor-pointer"
+                onclick="verifyOTP()">Verify OTP</button>
+        </div>
+        
 
-    <h1>SPLIT with friends</h1>
-
-    <div>
-        <p id="currentUserName"></p>
-        <p id="friendUserName"></p>
-
-        <label for="name">Name:</label>
-        <input type="text" id="name" />
-
-        <label for="amount">Total Amount (₹):</label>
-        <input type="number" inputmode="numeric" pattern="[0-9]*" id="amount" />
-
-        <label for="splitOption">Split Option:</label>
-        <div class="custom-select">
-            <select id="splitOption">
-                <option value="equal">Equal Split</option>
-                <option value="percentage">Percentage Split</option>
-                <option value="custom">Custom Split</option>
-            </select>
-            <div class="custom-options">
-                <div class="custom-option" data-value="equal">Equal Split</div>
-                <div class="custom-option" data-value="percentage">Percentage Split</div>
-                <div class="custom-option" data-value="custom">Custom Split</div>
+        <div class="footer">
+            <div class="text-xs text-gray-400">
+                By “Logging in”, you accept our <br> <span class="text-white">Terms & Condition</span> and <span
+                    class="text-white">Privacy Policy</span>
             </div>
-        </div>
-
-        <div id="percentageInput">
-            <label for="percentage">Percentage (%):</label>
-            <input type="number" id="percentage" />
-        </div>
-
-        <div id="customAmountInput">
-            <label for="customAmount">Custom Amount (₹):</label>
-            <input type="number" id="customAmount" />
-        </div>
-
-        <label for="whoPaid">Who Paid:</label>
-        <div class="custom-select">
-            <select id="whoPaid" name="whoPaid" required>
-                <option value="me">Me</option>
-                <option value="friendId">Friend</option>
-            </select>
-            <div class="custom-options">
-                <div class="custom-option" data-value="me">Me</div>
-                <div class="custom-option" data-value="friendId">Friend</div>
-            </div>
-        </div>
-
-        <div>
-            <p id="splitAmount"></p>
-            <p id="remainingAmount"></p>
-            <p id="whoPaid"></p>
         </div>
     </div>
-
-    <button id="saveExpenseButton">Save Expense</button>
-    <a href="./dashboard.html" id="homeButton">Home</a>
-    <a href="#" id="backButton">Back</a>
-
-    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
-    <script>
-        window.addEventListener('DOMContentLoaded', (event) => {
-            // Initialize Choices for the custom dropdown
-            const splitOptionElement = document.getElementById('splitOption');
-            const whoPaidElement = document.getElementById('whoPaid');
-
-            new Choices(splitOptionElement, { searchEnabled: false, itemSelectText: '' });
-            new Choices(whoPaidElement, { searchEnabled: false, itemSelectText: '' });
-        });
-    </script>
 </body>
-
-</html>
+  </html>
