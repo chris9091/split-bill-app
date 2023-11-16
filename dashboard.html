@@ -145,33 +145,65 @@ function displayLatestTransactions() {
       snapshot.forEach((transactionSnapshot) => {
         const transactionData = transactionSnapshot.val();
 
-        // Create HTML elements for each transaction entry
-        const transactionEntry = document.createElement('div');
-        transactionEntry.classList.add('history-entry');
+        // Get the friend's name who paid
+        const whoPaidUserId = transactionData.whoPaid;
+        const whoPaidNamePromise = getUserName(whoPaidUserId);
 
-        const date = new Date(transactionData.timestamp);
-        const formattedDate = date.toLocaleString(); // Adjust the format as needed
+        whoPaidNamePromise.then((whoPaidName) => {
+          const date = new Date(transactionData.timestamp);
+          const formattedDate = date.toLocaleString(); // Adjust the format as needed
 
-        transactionEntry.innerHTML = `
-          <p><strong>Amount:</strong> ${transactionData.amount} INR</p>
-          <p><strong>Total Amount:</strong> ${transactionData.totalAmount} INR</p>
-          <p><strong>Split Option:</strong> ${transactionData.splitOption}</p>
-          <p><strong>Percentage:</strong> ${transactionData.percentage}%</p>
-          <p><strong>Custom Amount:</strong> ${transactionData.customAmount} INR</p>
-          <p><strong>Who Paid:</strong> ${transactionData.whoPaid}</p>
-          <p><strong>User's Share:</strong> ${transactionData.userAmount} INR</p>
-          <p><strong>Friend's Share:</strong> ${transactionData.friendAmount} INR</p>
-          <p><strong>Timestamp:</strong> ${formattedDate}</p>
-        `;
+          // Calculate if the user owes or is owed
+          const isOwe = authUserId === whoPaidUserId;
+          const amountText = isOwe ? `You owe: ${transactionData.amount} INR` : `You are owed: ${transactionData.amount} INR`;
 
-        // Append the transaction entry to the history table body
-        historyTableBody.appendChild(transactionEntry);
+          // Determine text color (red for owe, green for owed)
+          const textColor = isOwe ? 'red' : 'green';
+
+          // Create HTML elements for each transaction entry
+          const transactionEntry = document.createElement('div');
+          transactionEntry.classList.add('history-entry');
+
+          transactionEntry.innerHTML = `
+            <p><strong></strong> ${formattedDate}</p>
+            <p style="color: ${textColor};"><strong>${amountText}</strong></p>
+          `;
+
+          // Add click event to show detailed transaction information
+          transactionEntry.addEventListener('click', () => {
+            showDetailedTransaction(transactionData, whoPaidName);
+          });
+
+          // Append the transaction entry to the history table body
+          historyTableBody.appendChild(transactionEntry);
+        });
       });
     })
     .catch((error) => {
       console.error('Error fetching transactions:', error);
     });
 }
+
+// Function to get the user's name from the user's ID
+function getUserName(userId) {
+  return database.ref(`users/${userId}/details/name`).once('value')
+    .then((snapshot) => snapshot.val())
+    .catch((error) => {
+      console.error('Error fetching user name:', error);
+      return 'Unknown';
+    });
+}
+
+// Function to show detailed transaction information
+function showDetailedTransaction(transactionData, whoPaidName) {
+  // Customize this function to display detailed transaction information
+  console.log('Detailed transaction information:', transactionData, whoPaidName);
+  // You can use a modal or update another section of your page to display details
+}
+
+
+
+
 
 // Get the logout button and the popup elements
 const logoutButton = document.getElementById('logoutButton1'); // Updated ID
@@ -215,143 +247,9 @@ const addButton = document.getElementById('addButton');
         window.location.href = './search.html';
 
 });
-
-
-
-// Function to handle the click event of the toggle buttons
-document.getElementById('toggle-expense').addEventListener('click', function() {
-    // Remove "active" class from income button
-    document.getElementById('toggle-income').classList.remove('active');
-    // Add "active" class to expense button
-    this.classList.add('active');
-    // Update the popup title
-    document.getElementById('popup-title').textContent = 'Add Expense 😭';
-});
-
-document.getElementById('toggle-income').addEventListener('click', function() {
-    // Remove "active" class from expense button
-    document.getElementById('toggle-expense').classList.remove('active');
-    // Add "active" class to income button
-    this.classList.add('active');
-    // Update the popup title
-    document.getElementById('popup-title').textContent = 'Add Income 😍';
-});
-
-// Function to refresh the page
-function refreshPage() {
-    location.reload();
-}
-
-// // Function to handle form submission and store data in the database
-// document.getElementById('popup-form').addEventListener('submit', function(event) {
-//     event.preventDefault(); // Prevent the form from submitting traditionally
-
-//     // Get the form values
-//     const amount = parseFloat(document.getElementById('amount').value);
-//     const date = document.getElementById('date').value;
-//     const category = document.getElementById('category').value;
-//     const account = document.getElementById('account').value;
-
-//     // Determine whether it's an income or expense based on the selected toggle button
-//     const isExpense = document.getElementById('toggle-expense').classList.contains('active');
-//     const isIncome = document.getElementById('toggle-income').classList.contains('active');
-
-//     // Create a reference to the user's data in the database (replace 'userId' with the actual user ID)
-//     const userId = firebase.auth().currentUser.uid;
-
-//     // Create a new transaction object with a timestamp
-//     const transaction = {
-//         amount: isExpense ? -amount : amount,
-//         date: date,
-//         category: category,
-//         account: account, // Add a comma here
-//         timestamp: firebase.database.ServerValue.TIMESTAMP
-//     };
-//     // Choose the appropriate database reference based on the transaction type
-//     const transactionTypeRef = isExpense ? 'expenses' : 'income';
-
-//     // Create a reference to the user's expenses or income node and push the new transaction
-//     const userTransactionRef = firebase.database().ref('users/' + userId + '/' + transactionTypeRef);
-//     userTransactionRef.push(transaction, function(error) {
-//         if (error) {
-//             console.error('Error adding transaction:', error);
-//         } else {
-//             // Clear the form and hide the popup on success
-//             document.getElementById('popup-form').reset();
-//             document.getElementById('popup').style.display = 'none';
-//             // Show success message
-//             document.getElementById('success-message').style.display = 'block';
-//             setTimeout(function() {
-//                 // Hide success message after a delay
-//                 document.getElementById('success-message').style.display = 'none';
-//                 // Refresh the page
-//                 location.reload();
-//             }, 1000);
-//         }
-//     });
-// });
-
-// // Function to handle the click event of the close button
-// document.getElementById('close-popup').addEventListener('click', function() {
-//     // Hide the popup when the close button is clicked
-//     document.getElementById('popup').style.display = 'none';
-// });
-// });
-
-// Disable zooming on the entire document
-document.addEventListener('gesturestart', function (e) {
-    e.preventDefault();
-});
-
-// Prevent pinch-to-zoom and double-tap gestures
-document.addEventListener('touchmove', function(event) {
-    if(event.scale !== 1) {
-        event.preventDefault();
-    }
-}, { passive: false });
-
-// Alternative method to prevent pinch-to-zoom on older Android devices
-document.addEventListener('touchstart', function(event) {
-    if(event.touches.length > 1) {
-        event.preventDefault();
-    }
-}, { passive: false });
-
-
-// Get the button element by its id
-const hapticButton = document.getElementById('addButton');
-
-// Function to trigger haptic feedback
-function triggerHapticFeedback() {
-    // Check if the 'vibrate' method is supported by the browser
-    if (navigator.vibrate) {
-        // Vibrate for 100 milliseconds
-        navigator.vibrate(100);
-    } else {
-        // Fallback for browsers that do not support haptic feedback
-        console.log("Haptic feedback is not supported on this device.");
-    }
-}
-
-// Add click event listener to the button and trigger haptic feedback
-hapticButton.addEventListener('click', triggerHapticFeedback);
-
-    // Get the current URL
-    const currentURL = window.location.href;
-
-    // Get the navigation items (anchor tags) and their child icons
-    const navItems = document.querySelectorAll('.navbar .nav-item');
-    
-    // Loop through each nav item and check if the URL matches
-    navItems.forEach(item => {
-        const link = item.getAttribute('href');
-        const icon = item.querySelector('i');
-        if (currentURL.includes(link)) {
-            item.classList.add('active'); // Highlight the nav item
-            icon.classList.add('active'); // Highlight the icon
-        }
     });
-});
+
+
 
 
 </script>
