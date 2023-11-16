@@ -43,6 +43,74 @@
             border: 2px solid #F8861E;
         }
 
+        .custom-select {
+            position: relative;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .custom-select select {
+            display: none;
+        }
+
+        .custom-select:after {
+            content: "\25BC";
+            font-size: 16px;
+            color: #F8861E;
+            position: absolute;
+            top: 12px;
+            right: 10px;
+        }
+
+        .custom-select select {
+            display: none;
+        }
+
+        .custom-options {
+            max-height: 120px;
+            overflow: auto;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            border: 1px solid #F8861E;
+            border-top: none;
+            background: #000;
+            z-index: 999;
+            display: none;
+            border-radius: 0 0 5px 5px;
+            width: 100%; /* Set the width to 100% */
+        }
+
+        .custom-options.active {
+            display: block;
+        }
+
+        .custom-option {
+            position: relative;
+            display: block;
+            padding: 0 20px 0 10px;
+            font-size: 16px;
+            line-height: 40px;
+            cursor: pointer;
+            color: #F8861E;
+            transition: background .3s;
+        }
+
+        .custom-option:hover {
+            background: #F8861E;
+        }
+
+        .custom-option.selected {
+            color: #000;
+            background: #F8861E;
+        }
+
+        .custom-select {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
         #percentageInput,
         #customAmountInput {
             display: none;
@@ -91,57 +159,12 @@
             top: 10px;
             left: 10px;
         }
-
-        /* Loading Animation Styles */
-        #loadingContainer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 999;
-            visibility: hidden;
-            opacity: 0;
-            transition: visibility 0s, opacity 0.5s linear;
-        }
-
-        #loadingText {
-            color: #F8861E;
-            font-size: 20px;
-            margin-bottom: 20px;
-        }
-
-        #loadingBar {
-            width: 200px;
-            height: 20px;
-            background-color: #333;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        #progressBar {
-            height: 100%;
-            width: 0;
-            background-color: #F8861E;
-            transition: width 0.5s ease-in-out;
-        }
     </style>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
 </head>
 
 <body>
-    <!-- Loading Animation Container -->
-    <div id="loadingContainer">
-        <div id="loadingText">Loading...</div>
-        <div id="loadingBar">
-            <div id="progressBar"></div>
-        </div>
-    </div>
-
     <h1>SPLIT with friends</h1>
 
     <div>
@@ -155,11 +178,18 @@
         <input type="number" inputmode="numeric" pattern="[0-9]*" id="amount" />
 
         <label for="splitOption">Split Option:</label>
-        <select id="splitOption">
-            <option value="equal">Equal Split</option>
-            <option value="percentage">Percentage Split</option>
-            <option value="custom">Custom Split</option>
-        </select>
+        <div class="custom-select">
+            <select id="splitOption">
+                <option value="equal">Equal Split</option>
+                <option value="percentage">Percentage Split</option>
+                <option value="custom">Custom Split</option>
+            </select>
+            <div class="custom-options">
+                <div class="custom-option" data-value="equal">Equal Split</div>
+                <div class="custom-option" data-value="percentage">Percentage Split</div>
+                <div class="custom-option" data-value="custom">Custom Split</div>
+            </div>
+        </div>
 
         <div id="percentageInput">
             <label for="percentage">Percentage (%):</label>
@@ -172,10 +202,16 @@
         </div>
 
         <label for="whoPaid">Who Paid:</label>
-        <select id="whoPaid" name="whoPaid" required>
-            <option value="me">Me</option>
-            <option value="friendId">Friend</option>
-        </select>
+        <div class="custom-select">
+            <select id="whoPaid" name="whoPaid" required>
+                <option value="me">Me</option>
+                <option value="friendId">Friend</option>
+            </select>
+            <div class="custom-options">
+                <div class="custom-option" data-value="me">Me</div>
+                <div class="custom-option" data-value="friendId">Friend</div>
+            </div>
+        </div>
 
         <div>
             <p id="splitAmount"></p>
@@ -188,33 +224,15 @@
     <a href="./dashboard.html" id="homeButton">Home</a>
     <a href="#" id="backButton">Back</a>
 
-    <!-- Loading Animation Script -->
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
     <script>
         window.addEventListener('DOMContentLoaded', (event) => {
-            const loadingContainer = document.getElementById('loadingContainer');
-            const progressBar = document.getElementById('progressBar');
+            // Initialize Choices for the custom dropdown
+            const splitOptionElement = document.getElementById('splitOption');
+            const whoPaidElement = document.getElementById('whoPaid');
 
-            function simulateLoading() {
-                loadingContainer.style.visibility = 'visible';
-                loadingContainer.style.opacity = '1';
-
-                let progress = 0;
-                const interval = setInterval(() => {
-                    progress += 10;
-                    progressBar.style.width = `${progress}%`;
-
-                    if (progress >= 100) {
-                        clearInterval(interval);
-                        setTimeout(() => {
-                            loadingContainer.style.opacity = '0';
-                            loadingContainer.style.visibility = 'hidden';
-                        }, 500);
-                    }
-                }, 300);
-            }
-
-            // Simulate loading after 2 seconds (replace this with your actual loading logic)
-            setTimeout(simulateLoading, 200);
+            new Choices(splitOptionElement, { searchEnabled: false, itemSelectText: '' });
+            new Choices(whoPaidElement, { searchEnabled: false, itemSelectText: '' });
         });
     </script>
 </body>
