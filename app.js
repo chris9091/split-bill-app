@@ -203,10 +203,6 @@ document.getElementById('saveExpenseButton').addEventListener('click', async fun
   const percentage = parseFloat(document.getElementById('percentage').value) || 0;
   const customAmount = parseFloat(document.getElementById('customAmount').value) || 0;
 
-  // Calculate amount to pay based on the split option
-  let amountToPayMe = 0;
-  let amountToPayFriend = 0;
-
   // Get the selected user from the dropdown
   const selectedUser = document.getElementById('whoPaid');
   if (!selectedUser || selectedUser.selectedIndex === -1) {
@@ -228,17 +224,21 @@ document.getElementById('saveExpenseButton').addEventListener('click', async fun
     friendName = await getUserNameById(friendID) || 'Friend';
   }
 
+  // Calculate amount to pay based on the split option
+  let amountToPayMe = 0;
+  let amountToPayFriend = 0;
+
   if (currentUserID === selectedUserId) {
     // If the current user paid, set the real user name and amount accordingly
     currentUserName = await getUserNameById(currentUserID) || 'You';
-    amountToPayMe = splitOption === 'custom' ? customAmount : (percentage / 100) * totalAmount;
-    amountToPayFriend = totalAmount - amountToPayMe;
+    amountToPayMe = splitOption !== 'custom' ? (percentage / 100) * totalAmount : customAmount;
+    amountToPayFriend = totalAmount - customAmount;
   } else {
     // If a friend paid, set the friend's name and current user's name, and amount accordingly
     currentUserName = await getUserNameById(currentUserID) || 'You';
     friendName = await getUserNameById(selectedUserId) || 'Friend';
-    amountToPayFriend = splitOption === 'custom' ? customAmount : (percentage / 100) * totalAmount;
-    amountToPayMe = totalAmount - amountToPayFriend;
+    amountToPayMe = 0;
+    amountToPayFriend = splitOption !== 'custom' ? (percentage / 100) * totalAmount : totalAmount - customAmount;
   }
 
   try {
@@ -252,10 +252,10 @@ document.getElementById('saveExpenseButton').addEventListener('click', async fun
       splitOption: splitOption,
       percentage: percentage,
       customAmount: customAmount,
-      whoPaid: currentUserName,
+      whoPaid: selectedUserName, // Use selectedUserName instead of currentUserName
       user1: currentUserID,
       user1Name: currentUserName,
-      user1Share: amountToPayMe,
+      user1Share: amountToPayMe + customAmount, // Add customAmount here
       user2: friendID,
       user2Name: friendName,
       user2Share: amountToPayFriend,
@@ -272,6 +272,7 @@ document.getElementById('saveExpenseButton').addEventListener('click', async fun
     console.error('Error saving expense:', error);
   }
 });
+
 
 
 
