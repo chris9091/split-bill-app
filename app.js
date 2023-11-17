@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   const firebaseConfig = {
     apiKey: "AIzaSyCZfnZbZIKR1zyywjrXJu0MJOjETO35aTE",
     authDomain: "split-bill-6c19e.firebaseapp.com",
@@ -9,92 +9,162 @@ document.addEventListener('DOMContentLoaded', function() {
     appId: "1:297198677510:web:9cec9889c3224da9735d87"
   };
   firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
 
-    const auth = firebase.auth();
-    let currentUser;
-
-    // Listen for changes in the authentication state
-    auth.onAuthStateChanged(function (user) {
+  function getCurrentUserID() {
+    return new Promise((resolve, reject) => {
+      const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
         if (user) {
-            // User is signed in
-            currentUser = user;
-            document.getElementById("currentUserName").innerText = `Current User: ${currentUser.displayName}`;
+          resolve(user.uid);
         } else {
-            // No user is signed in
-            console.log("User not logged in");
-            // Redirect to the login page or handle the scenario accordingly
+          console.error('User not authenticated.');
+          reject(null);
         }
+        unsubscribe();
+      });
     });
-
-    // Fetch friend name from URL parameter
-    const urlParams = new URLSearchParams(window.location.search);
-    const friendId = urlParams.get("friendId");
-
-// Function to fetch friend name from the database based on friendId
-async function fetchFriendName(friendId) {
-  try {
-      const userSnapshot = await firebase.database().ref(`users/${friendId}/details`).once("value");
-      const friendName = userSnapshot.val().name;
-      return friendName; // Return a default value if friendName is undefined
-  } catch (error) {
-      throw error;
   }
-}
 
-    // Dynamically update Split Option input fields
-    const splitOptionDropdown = document.getElementById("splitOption");
-    const percentageInput = document.getElementById("percentageInput");
-    const customAmountInput = document.getElementById("customAmountInput");
+  function saveExpense(expenseData) {
+    const newExpenseRef = database.ref('expenses').push();
+    newExpenseRef.set(expenseData)
+      .then(() => {
+        // Display a success popup or notification
+        alert('Expense saved successfully!');
+      })
+      .catch((error) => {
+        console.error('Error saving expense:', error);
+      });
+  }
 
-    splitOptionDropdown.addEventListener("change", function () {
-        const selectedOption = splitOptionDropdown.value;
+  function updateExpenseDetails() {
+    const amountInput = document.getElementById('amount');
+    const splitOption = document.getElementById('splitOption').value;
+    const percentageInput = document.getElementById('percentage');
+    const customAmountInput = document.getElementById('customAmount');
+    const whoPaidDropdown = document.getElementById('whoPaid');
 
-        if (selectedOption === "percentage") {
-            percentageInput.style.display = "block";
-            customAmountInput.style.display = "none";
-        } else if (selectedOption === "custom") {
-            percentageInput.style.display = "none";
-            customAmountInput.style.display = "block";
-        } else {
-            percentageInput.style.display = "none";
-            customAmountInput.style.display = "none";
-        }
-    });
-
-// Save expense to the database
-document.getElementById("saveExpenseButton").addEventListener("click", function () {
-  const name = document.getElementById("name").value;
-  const amount = parseFloat(document.getElementById("amount").value);
-  const splitOption = document.getElementById("splitOption").value;
-  const percentage = parseFloat(document.getElementById("percentage").value) || 0;
-  const customAmount = parseFloat(document.getElementById("customAmount").value) || 0;
-  const whoPaid = document.getElementById("whoPaid").value;
-
-  // Create a unique split ID
-  const splitId = generateSplitId();
-
-  // Save split details
-  saveSplitDetails(currentUser.uid, currentUser.displayName, friendId, name, whoPaid, amount, splitOption, percentage, customAmount, splitId);
-});
-
-// Function to save split details
-function saveSplitDetails(userId, userName, friendId, name, whoPaid, amount, splitOption, percentage, customAmount, splitId) {
-  const splitRef = firebase.database().ref(`splits/${splitId}`);
-  splitRef.set({
-      userId1: userId,
-      userName1: userName,
-      userId2: friendId,
-      userName2: name, // Assuming 'name' is the friend's name
-      whoPaid: whoPaid === 'me' ? userName : name, // Use the appropriate username
-      amount: amount,
-      splitOption: splitOption,
-      percentage: percentage,
-      customAmount: customAmount
-  });
-}
-
-    // Function to generate a unique split ID (you can customize this function based on your needs)
-    function generateSplitId() {
-        return firebase.database().ref("splits").push().key;
+    if (!amountInput || !splitOption || !whoPaidDropdown) {
+      console.error('Required elements are missing.');
+      return;
     }
+
+    const selectedUser = whoPaidDropdown;
+    if (selectedUser.selectedIndex === -1) {
+      console.error('No user selected.');
+      return;
+    }
+
+    const selectedUserId = selectedUser.value;
+    const selectedUserName = selectedUser.options[selectedUser.selectedIndex].text;
+
+    const totalAmount = parseFloat(amountInput.value) || 0;
+    const percentage = parseFloat(percentageInput.value) || 0;
+    const customAmount = parseFloat(customAmountInput.value) || 0;
+
+    if (totalAmount <= 0) {
+      console.error('Amount should be greater than zero.');
+      return;
+    }
+
+    let amountToPayMe = 0;
+    let amountToPayFriend = 0;
+
+    switch (splitOption) {
+      case 'equal':
+        amountToPayMe = totalAmount / 2;
+        amountToPayFriend = totalAmount / 2;
+        break;
+      case 'percentage':
+        amountToPayMe = (percentage / 100) * totalAmount;
+        amountToPayFriend = totalAmount - amountToPayMe;
+        break;
+      case 'custom':
+        amountToPayMe = customAmount;
+        amountToPayFriend = totalAmount - amountToPayMe;
+        break;
+    }
+
+    const friendID = getParameterByName('friendId');
+    database.ref('users').child(friendID).once('value').then((friendSnapshot) => {
+      const friendDetails = friendSnapshot.val().details;
+      const friendName = friendDetails.name;
+
+      const expenseData = {
+        title: "Test", // You can change this based on your requirements
+        amount: totalAmount,
+        splitOption: splitOption,
+        percentage: percentage,
+        customAmount: customAmount,
+        whoPaid: selectedUserName,
+        userId: selectedUserId,
+        userName: selectedUserName,
+        friend: {
+          friendId: friendID,
+          friendName: friendName,
+        },
+        timestamp: firebase.database.ServerValue.TIMESTAMP, // Use server timestamp
+      };
+
+      saveExpense(expenseData);
+    });
+  }
+
+  async function populateUsersDropdown() {
+    const usersDropdown = document.getElementById('whoPaid');
+
+    try {
+      const currentUserID = await getCurrentUserID();
+      const friendID = getParameterByName('friendId');
+
+      database.ref('users').once('value').then((snapshot) => {
+        snapshot.forEach((userSnapshot) => {
+          const userId = userSnapshot.key;
+          const userName = userSnapshot.val().details.name;
+
+          if (userId === currentUserID || userId === friendID) {
+            const option = document.createElement('option');
+            option.value = userId;
+            option.text = (userId === currentUserID) ? 'Me' : userName;
+            usersDropdown.add(option);
+          }
+        });
+
+        updateExpenseDetails();
+      });
+
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  function getParameterByName(name, url) {
+    if (!url) url = window.location.href;
+    name = name.replace(/[\[\]]/g, '\\$&');
+    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+      results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, ' '));
+  }
+
+  populateUsersDropdown();
+  updateExpenseDetails();
+
+  document.getElementById('amount').addEventListener('input', updateExpenseDetails);
+  document.getElementById('percentage').addEventListener('input', updateExpenseDetails);
+  document.getElementById('customAmount').addEventListener('input', updateExpenseDetails);
+  document.getElementById('whoPaid').addEventListener('change', updateExpenseDetails);
+  document.getElementById('splitOption').addEventListener('change', function () {
+    const percentageInput = document.getElementById('percentageInput');
+    const customAmountInput = document.getElementById('customAmountInput');
+
+    percentageInput.style.display = this.value === 'percentage' ? 'block' : 'none';
+    customAmountInput.style.display = this.value === 'custom' ? 'block' : 'none';
+
+    updateExpenseDetails();
+  });
+
+  document.getElementById('saveExpenseButton').addEventListener('click', updateExpenseDetails);
+
 });

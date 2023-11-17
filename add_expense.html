@@ -3,28 +3,36 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SPLIT</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" crossorigin="anonymous">
+
+    <title>Expense Sharing</title>
     <style>
         body {
-            font-family: 'Press Start 2P', cursive;
-            background-color: #000;
-            color: #F8861E;
-            padding: 10px;
+            font-family: Arial, sans-serif;
             margin: 0;
-            overflow: hidden;
+            padding: 0;
+            background-color: #000000; /* Updated background color to black */
+            color: #ffffff; /* Updated text color to white */
+        }
+
+        header {
+            background-color: #000000; /* Updated background color to black */
+            padding: 10px;
+            text-align: center;
+            color: #ffffff; /* Updated text color to white */
+            position: fixed;
+            top: 0;
+            width: 100%;
+            font-family: 'montserrat';
         }
 
         h1 {
-            text-align: center;
-            font-size: 24px;
-            margin-bottom: 20px;
-            text-transform: uppercase;
+            margin-top: 0;
         }
 
-        div {
-            margin: 10px;
-            position: relative;
+        main {
+            padding: 70px 10px 10px; /* Adjusted padding to make content visible below the fixed header */
         }
 
         label {
@@ -34,204 +42,172 @@
 
         input,
         select {
-            width: calc(100% - 20px);
+            width: calc(100% - 20px); /* Adjusted width to consider padding */
             padding: 8px;
             margin-bottom: 10px;
             box-sizing: border-box;
-            background-color: #000;
-            color: #F8861E;
-            border: 2px solid #F8861E;
         }
 
-        .custom-select {
-    position: relative;
-    margin-left: -18px;
-    width: calc(100% + 8px);
-    margin-bottom: 10px;
-}
-
-
-        .custom-select select {
-            display: none;
-        }
-
-
-
-        .custom-select select {
-            display: none;
-        }
-
-        .custom-options {
-            max-height: 120px;
-            overflow: auto;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            border: 1px solid #F8861E;
-            border-top: none;
-            background: #000;
-            z-index: 999;
-            display: none;
-            border-radius: 0 0 5px 5px;
-            width: 100%; /* Set the width to 100% */
-        }
-
-        .custom-options.active {
-            display: block;
-        }
-
-        .custom-option {
-            position: relative;
-            display: block;
-            padding: 0 20px 0 10px;
-            font-size: 16px;
-            line-height: 40px;
-            cursor: pointer;
-            color: #F8861E;
-            transition: background .3s;
-        }
-
-        .custom-option:hover {
-            background: #F8861E;
-        }
-
-        .custom-option.selected {
-            color: #000;
-            background: #F8861E;
-        }
-
-        #percentageInput,
-        #customAmountInput {
-            display: none;
-        }
-
-        div p {
-            margin-top: 0;
-        }
-
-        #splitAmount,
-        #remainingAmount,
-        #whoPaid {
-            font-weight: bold;
-        }
-
-        #saveExpenseButton,
-        #homeButton,
-        #backButton {
-            text-decoration: none;
-            color: #F8861E;
+        button {
+            background-color: #ffff00;
+            color: #000000; /* Updated text color to white */
             padding: 10px;
-            border: 2px solid #F8861E;
-            border-radius: 5px;
-            font-weight: bold;
-            position: fixed;
+            border: none;
             cursor: pointer;
+            width: calc(100% - 20px); /* Adjusted width to consider padding */
         }
 
-        #saveExpenseButton {
-            background-color: #F8861E;
-            color: #0D1116;
-            width: calc(100% - 20px);
-            font-size: 16px;
-            bottom: 9%;
-            left: 10px;
-            right: 10px;
+        button:hover {
+            background-color: #393939;
+            color: #ffffff;
         }
 
-        #homeButton {
-    width: calc(100% - 44px);
-    bottom: 2%;
-    left: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+        /* CSS for the fixed navbar */
+        .navbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background-color: #000000; /* Updated background color to black */
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            font-size: 12px; /* Adjust the font size as needed */
+        }
+
+        .nav-item {
+            color: #ffffff; /* Updated text color to white */
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: 'montserrat';
+        }
+
+        .nav-center {
+            background-color: #ffff00;
+            border-radius: 50%;
+            padding: 15px;
+        }
+
+        .nav-center-btn {
+            color: #000000; /* Set the color of the "+" sign to black */
+            font-size: 24px;
+        }
+
+        /* Font Awesome Icons */
+        .fa-home, .fa-exchange-alt, .fa-chart-pie, .fa-user {
+            font-size: 20px;
+        }
+
+        /* Add space between icon and text */
+        .nav-item span {
+            margin-top: 5px; /* Adjust the value to increase or decrease the gap */
+        }
+
+        .active-icon {
+            color: #000000; /* Change the color to indicate active state */
+        }
+
+        table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  background-color: #000000;
+}
+
+#amountToPay {
+  margin-top: 20px;
 }
 
 
-        #backButton {
-            top: 10px;
-            left: 10px;
-        }
     </style>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+    <!-- Include Firebase scripts -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <!-- Include your app.js script -->
+    <script src="app.js"></script>
 </head>
 
 <body>
+    <header>
+        <h1>Kudickka Split</h1>
+    </header>
     <br>
     <br>
-    <br>
 
-    <h1>SPLIT with friends</h1>
+    <main>
+        <div>
+            <label for="name" required >Name:</label>
+            <input type="text" id="name" />
+        </div>
 
-    <div>
-        <p id="currentUserName"></p>
-        <p id="friendUserName"></p>
+        <div>
+            <label for="amount">Total Amount (₹):</label>
+            <input type="number" id="amount" />
+        </div>
 
-        <label for="name">Name:</label>
-        <input type="text" id="name" />
-
-        <label for="amount">Total Amount (₹):</label>
-        <input type="number" inputmode="numeric" pattern="[0-9]*" id="amount" />
-
-        <label for="splitOption">Split Option:</label>
-        <div class="custom-select">
+        <div>
+            <label for="splitOption">Split Option:</label>
             <select id="splitOption">
                 <option value="equal">Equal Split</option>
                 <option value="percentage">Percentage Split</option>
                 <option value="custom">Custom Split</option>
             </select>
-            <div class="custom-options">
-                <div class="custom-option" data-value="equal">Equal Split</div>
-                <div class="custom-option" data-value="percentage">Percentage Split</div>
-                <div class="custom-option" data-value="custom">Custom Split</div>
-            </div>
         </div>
 
-        <div id="percentageInput">
-            <label for="percentage">Percentage (%):</label>
+        <div id="percentageInput" hidden>
+            <label for="percentage">Percentage (%) paid by you:</label>
             <input type="number" id="percentage" />
         </div>
 
-        <div id="customAmountInput">
-            <label for="customAmount">Custom Amount (₹):</label>
+        <div id="customAmountInput" hidden>
+            <label for="customAmount">Amount (₹) paid by You:</label>
             <input type="number" id="customAmount" />
         </div>
 
-        <label for="whoPaid">Who Paid:</label>
-        <div class="custom-select">
-            <select id="whoPaid" name="whoPaid" required>
-                <option value="me">Me</option>
-                <option value="friendId">Friend</option>
-            </select>
-            <div class="custom-options">
-                <div class="custom-option" data-value="me">Me</div>
-                <div class="custom-option" data-value="friendId">Friend</div>
-            </div>
+        <div>
+            <label for="whoPaid">Who Paid:</label>
+            <select id="whoPaid"></select>
         </div>
 
-        <div>
-            <p id="splitAmount"></p>
-            <p id="remainingAmount"></p>
-            <p id="whoPaid"></p>
+        <p id="friendName"></p>
+        <div id="friendShare"></div>
+               
+        <br>
+
+        <button id="saveExpenseButton">Save Expense</button>
+    </main>
+
+    <div class="navbar">
+        <a href="#home" class="nav-item"><i class="fas fa-home"></i><span>Home</span></a>
+        <a href="/dashboard.html" class="nav-item"><i class="fas fa-exchange-alt"></i><span>Transaction</span></a>
+        <div class="nav-item nav-center">
+            <a href="/search.html" class="nav-center-btn"><i class="fas fa-plus"></i></a>
         </div>
+        <a href="#" class="nav-item"><i class="fas fa-chart-pie"></i><span>Report</span></a>
+        <a href="./profile.html" class="nav-item"><i class="fas fa-user"></i><span>Profile</span></a>
     </div>
 
-    <button id="saveExpenseButton">Save Expense</button>
-    <a href="./dashboard.html" id="homeButton">Home</a>
-    <a href="#" id="backButton">Back</a>
-
-    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
     <script>
-        window.addEventListener('DOMContentLoaded', (event) => {
-            // Initialize Choices for the custom dropdown
-            const splitOptionElement = document.getElementById('splitOption');
-            const whoPaidElement = document.getElementById('whoPaid');
+        function goBack() {
+            window.history.back();
+        }
 
-            new Choices(splitOptionElement, { searchEnabled: false, itemSelectText: '' });
-            new Choices(whoPaidElement, { searchEnabled: false, itemSelectText: '' });
-        });
+        function goHome() {
+            window.location.href = "https://1.1.1.1";
+        }
     </script>
 </body>
 
