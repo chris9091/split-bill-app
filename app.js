@@ -274,6 +274,7 @@ document.getElementById('saveExpenseButton').addEventListener('click', async fun
 });
 
 
+
   // Call the function to populate the users dropdown when the DOM is ready
   populateUsersDropdown();
 });
