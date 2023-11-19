@@ -215,7 +215,6 @@
       width: 100%;
       height: 100%;
       background-color: rgba(0, 0, 0, 0.5);
-      z-index: 1;
   }
   
   .popup-content {
@@ -483,7 +482,6 @@ span#user-id {
     background: rgba(0, 0, 0, 0.5);
     justify-content: center;
     align-items: center;
-    z-index: 9999;
 }
 
 .popup-content1 {
@@ -602,7 +600,7 @@ span#user-id {
   
   .modal-content {
     background-color: #fff;
-    color: #000000;
+    color: #ffffff;
     margin: 15% auto;
     padding: 50px;
     margin-top: 80%;
@@ -611,4 +609,74 @@ span#user-id {
     border-radius: 15px;
 
   }
-  
+  /* Add these styles to your existing stylesheet or create a new one */
+
+/* Style for the transaction entries */
+.transaction-entry {
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    font-family: 'Montserrat', sans-serif;
+}
+
+/* Style for transactions where the current user owes money */
+.transaction-entry.owe {
+    background-color: #FFD2D2; /* Light red background */
+    color: #FF4040; /* Dark red text */
+}
+
+/* Style for transactions where the current user gets money back */
+.transaction-entry.get-back {
+    background-color: #D2FFD2; /* Light green background */
+    color: #00A200; /* Dark green text */
+}
+
+/* Style for the container */
+.transaction-section {
+    width: 100%;
+    height: 70px;
+    position: relative;
+    background: #161616;
+    border-radius: 20px;
+    margin-bottom: 10px;
+}
+
+/* Style for section 1 */
+.section-1 {
+    left: 5%;
+    top: 17px;
+    position: absolute;
+    color: white;
+    font-size: 15px;
+    font-family: Inter;
+    font-weight: 500;
+    line-height: 20px;
+    word-wrap: break-word;
+}
+
+/* Style for section 2 */
+.section-2 {
+    left: 30%;
+    top: 17px;
+    position: absolute;
+    color: white;
+    font-size: 15px;
+    font-family: Inter;
+    font-weight: 500;
+    line-height: 18px;
+    word-wrap: break-word;
+}
+
+/* Style for section 3 */
+.section-3 {
+    right: 5%;
+    top: 17px;
+    position: absolute;
+    color: white;
+    font-size: 15px;
+    font-family: Inter;
+    font-weight: 500;
+    line-height: 18px;
+    word-wrap: break-word;
+}

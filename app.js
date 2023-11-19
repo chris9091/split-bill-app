@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', function () {
   firebase.initializeApp(firebaseConfig);
   const database = firebase.database();
 
-  // Function to get the current user's ID
 // Function to get the current user's ID
 function getCurrentUserID() {
   return new Promise((resolve, reject) => {
@@ -175,7 +174,14 @@ async function populateUsersDropdown() {
       if (userId === currentUserID || userId === friendID) {
         const option = document.createElement('option');
         option.value = userId;
-        option.text = userId === currentUserID ? 'You' : userName;
+        
+        // Check if the current user is selected and modify the display text
+        if (userId === currentUserID) {
+          option.text = userName; // Display the username instead of 'You'
+        } else {
+          option.text = userName === null ? 'Friend' : userName;
+        }
+        
         usersDropdown.add(option);
       }
     });
@@ -187,6 +193,7 @@ async function populateUsersDropdown() {
     console.error(error);
   }
 }
+
 
 // Event listener to handle the "Save Expense" button click
 document.getElementById('saveExpenseButton').addEventListener('click', async function () {

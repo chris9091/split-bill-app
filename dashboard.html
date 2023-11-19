@@ -1,64 +1,64 @@
-<!DOCTYPE html>
+<!DOCTYPE html>`
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <link rel="stylesheet" type="text/css" href="./stylesv1.css"> 
+    <link rel="stylesheet" type="text/css" href="./stylesv1.css">
     <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
-    
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" crossorigin="anonymous">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
 
     <title>Expense Calculator Dashboard</title>
 </head>
+
 <body>
-    
+
     <div class="container">
- <span id="user-id"></span>
+        <span id="user-id"></span>
 
         <header>
-            <div><span style="color: white; font-size: 16px; font-family: Montserrat; font-weight: 400; word-wrap: break-word">Ku</span><span style="color: #EEFF00; font-size: 16px; font-family: Montserrat; font-weight: 400; word-wrap: break-word">DicK</span><span style="color: white; font-size: 16px; font-family: Montserrat; font-weight: 400; word-wrap: break-word">Ka</span></div>            <button id="logoutButton1">Logout </button>
+            <div><span style="color: white; font-size: 16px; font-family: Montserrat; font-weight: 400; word-wrap: break-word">Ku</span><span style="color: #EEFF00; font-size: 16px; font-family: Montserrat; font-weight: 400; word-wrap: break-word">DicK</span><span style="color: white; font-size: 16px; font-family: Montserrat; font-weight: 400; word-wrap: break-word">Ka</span></div> <button id="logoutButton1">Logout </button>
             <div id="success-message" class="message" style="display: none;"></div>
         </header>
         <br>
         <br>
         <br>
         <section class="kpi-container">
-            
+
             <div class="kpi-box balance" id="balance-section">
                 <h3> Balance</h3>
                 <p id="balance-amount" class="currency-inr">₹ 0.00</p>
 
-    
-<button class="arrow-button" id="balance-button">
-    <svg viewBox="0 0 320 512" height="1em" xmlns="http://www.w3.org/2000/svg" class="chevron-right">
-    <path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path>
-</svg>
-</button>
+                <button class="arrow-button" id="balance-button">
+                    <svg viewBox="0 0 320 512" height="1em" xmlns="http://www.w3.org/2000/svg" class="chevron-right">
+                        <path
+                            d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path>
+                    </svg>
+                </button>
 
-  </div>
-            </div>            
             </div>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
+        </div>
+        </div>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
         </section>
         <section class="history">
-            <h3>Latest transactions:</h3>
-            <div class="history-entries-container" id="history-entries-container">
-                <div id="history-table-body"></div>
-
-                <!-- Transaction entries will be dynamically added here -->
-            </div>
+            <div id="userTransactions"></div>
+            <!-- Transaction entries will be dynamically added here -->
+        </section>
+        
         </section>
     </div>
-    
+
 
     <!-- Navbar codes -->
 
@@ -71,85 +71,178 @@
         <a href="#" class="nav-item"><i class="fas fa-chart-pie"></i><span>Report</span></a>
         <a href="./profile.html" class="nav-item"><i class="fas fa-user"></i><span>Profile</span></a>
     </div>
-    
-<!-- Logout Confirmation Popup -->
-<div class="popup" id="logoutPopup">
-    <div class="popup-content1">
-        <div class="popup-title2">Do you want to logout?</div>
-        <div><span style="color: white; font-size: 10px; font-family: Montserrat; font-weight: 600; word-wrap: break-word">This will log you out from </span><span style="color: white; font-size: 10px; font-family: Montserrat; font-weight: 500; word-wrap: break-word"> </span><span style="color: white; font-size: 10px; font-family: Montserrat; font-weight: 400; word-wrap: break-word">Ku</span><span style="color: #EEFF00; font-size: 10px; font-family: Montserrat; font-weight: 400; word-wrap: break-word">DicK</span><span style="color: white; font-size: 10px; font-family: Montserrat; font-weight: 400; word-wrap: break-word">Ka</span></div>        <div class="popup-buttons">
-            <br>
-            <button id="cancelButton">Cancel</button>
-            <button id="confirmButton">Confirm</button>
+
+    <!-- Logout Confirmation Popup -->
+    <div class="popup" id="logoutPopup">
+        <div class="popup-content1">
+            <div class="popup-title2">Do you want to logout?</div>
+            <div><span style="color: white; font-size: 10px; font-family: Montserrat; font-weight: 600; word-wrap: break-word">This will log you out from </span><span style="color: white; font-size: 10px; font-family: Montserrat; font-weight: 500; word-wrap: break-word"> </span><span style="color: white; font-size: 10px; font-family: Montserrat; font-weight: 400; word-wrap: break-word">Ku</span><span style="color: #EEFF00; font-size: 10px; font-family: Montserrat; font-weight: 400; word-wrap: break-word">DicK</span><span style="color: white; font-size: 10px; font-family: Montserrat; font-weight: 400; word-wrap: break-word">Ka</span></div>
+            <div class="popup-buttons">
+                <br> <button id="cancelButton">Cancel</button>
+                <button id="confirmButton">Confirm</button>
+            </div>
         </div>
     </div>
-</div>
 
-</body>
+
+
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM content loaded.');
+    document.addEventListener('DOMContentLoaded', async function () {
 
-    // Define the transactions variable at a higher scope
-const transactions = [];
+        // Initialize Firebase (if not already initialized)
+        var firebaseConfig = {
+            apiKey: "AIzaSyCZfnZbZIKR1zyywjrXJu0MJOjETO35aTE",
+            authDomain: "split-bill-6c19e.firebaseapp.com",
+            databaseURL: "https://split-bill-6c19e-default-rtdb.firebaseio.com",
+            projectId: "split-bill-6c19e",
+            storageBucket: "split-bill-6c19e.appspot.com",
+            messagingSenderId: "297198677510",
+            appId: "1:297198677510:web:9cec9889c3224da9735d87"
+        };
 
-// Initialize Firebase (if not already initialized)
-var firebaseConfig = {
-    apiKey: "AIzaSyCZfnZbZIKR1zyywjrXJu0MJOjETO35aTE",
-  authDomain: "split-bill-6c19e.firebaseapp.com",
-  databaseURL: "https://split-bill-6c19e-default-rtdb.firebaseio.com",
-  projectId: "split-bill-6c19e",
-  storageBucket: "split-bill-6c19e.appspot.com",
-  messagingSenderId: "297198677510",
-  appId: "1:297198677510:web:9cec9889c3224da9735d87"
-};
-    firebase.initializeApp(firebaseConfig);
-
-
-// Get the logout button and the popup elements
-const logoutButton = document.getElementById('logoutButton1'); // Updated ID
-const logoutPopup = document.getElementById('logoutPopup');
-const cancelButton = document.getElementById('cancelButton');
-const confirmButton = document.getElementById('confirmButton');
-
-// Add click event listener to the logout button
-logoutButton.addEventListener('click', function() {
-    logoutPopup.style.display = 'flex'; // Show the popup
-});
-
-// Add click event listeners to the popup buttons
-cancelButton.addEventListener('click', function() {
-    logoutPopup.style.display = 'none'; // Hide the popup on cancel
-});
-
-confirmButton.addEventListener('click', function() {
-    logout(); // Call the logout function on confirm
-    logoutPopup.style.display = 'none'; // Hide the popup after logout
-});
-    // Function to log out the user
-    function logout() {
         try {
-            firebase.auth().signOut().then(function() {
-                // Sign-out successful, redirect to the login page
-                window.location.href = '../index.html';
-            }).catch(function(error) {
-                // Handle sign-out error
-                console.error('Logout error:', error);
-            });
-        } catch (error) {
-            console.error('Logout error (try-catch):', error);
-        }
+  firebase.initializeApp(firebaseConfig);
+  console.log('Firebase initialized successfully.');
+} catch (error) {
+  console.error('Firebase initialization error:', error);
+}
+
+
+    const database = firebase.database();
+
+    // Function to get the current user's ID
+    async function getCurrentUserID() {
+    return new Promise((resolve, reject) => {
+        const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                console.log('User authenticated:', user);
+                resolve(user.uid);
+            } else {
+                console.error('User not authenticated.');
+                reject(null);
+            }
+            // Make sure to unsubscribe to avoid memory leaks
+            unsubscribe();
+        });
+    });
+}
+
+// Get the current user's ID
+const currentUserID = await getCurrentUserID(); // Wait for the ID
+console.log('Current User ID:', currentUserID);
+
+
+// Function to get user-specific transactions
+async function getUserTransactions() {
+    console.log('getUserTransactions function called.'); // Add this line
+
+    try {
+        // Get the current user's ID
+        const currentUserID = await getCurrentUserID(); // Wait for the ID
+        console.log('Current User ID:', currentUserID);
+
+        // Fetch transactions from Firebase where the current user is either user1 or user2
+        const userTransactionsRef = database.ref('expenses')
+            .orderByChild('user1')
+            .equalTo(currentUserID)
+            .once('value');
+
+        const friendTransactionsRef = database.ref('expenses')
+            .orderByChild('user2')
+            .equalTo(currentUserID)
+            .once('value');
+
+        // Wait for both queries to complete
+        const [userTransactionsSnapshot, friendTransactionsSnapshot] = await Promise.all([
+            userTransactionsRef,
+            friendTransactionsRef
+        ]);
+
+        console.log('User Transactions Snapshot:', userTransactionsSnapshot.val());
+        console.log('Friend Transactions Snapshot:', friendTransactionsSnapshot.val());
+
+        // Merge and process the snapshots
+        const mergedSnapshots = [
+            ...Object.values(userTransactionsSnapshot.val() || {}),
+            ...Object.values(friendTransactionsSnapshot.val() || {})
+        ];
+
+        console.log('Merged Snapshots:', mergedSnapshots);
+
+// Process the merged snapshots and display transactions
+const userTransactionsContainer = document.getElementById('userTransactions');
+let transactionsHTML = '<h2>Your Transactions</h2>';
+
+// Loop through mergedSnapshots and generate HTML
+for (const expense of mergedSnapshots) {
+  const date = new Date(expense.timestamp);
+  const formattedDate = `${date.toLocaleString('default', { month: 'short' })}<br>${date.getDate()}`;
+
+  transactionsHTML += `
+    <div class="transaction-section">
+        <div class="section-1">${formattedDate}</div>
+        <div class="section-2">${expense.title}</div>
+        <div class="section-3">
+            ${expense.whoPaid} paid ₹${expense.amount.toFixed(2)}<br>
+            You owe ₹${expense.customAmount.toFixed(2)}
+        </div>
+    </div>`;
+}
+
+
+// Display transactions in the container
+userTransactionsContainer.innerHTML = transactionsHTML;
+
+
+    } catch (error) {
+        console.error('Error fetching user transactions:', error);
     }
+}
 
-// Function to handle the click event of the "+" sign
-const addButton = document.getElementById('addButton');
-    // Show the popup when the "+" sign is clicked
-    addButton.addEventListener('click', function() {
-        window.location.href = './search.html';
 
-});
+
+        // Get the logout button and the popup elements
+        const logoutButton = document.getElementById('logoutButton1'); // Updated ID
+        const logoutPopup = document.getElementById('logoutPopup');
+        const cancelButton = document.getElementById('cancelButton');
+        const confirmButton = document.getElementById('confirmButton');
+
+        // Add click event listener to the logout button
+        logoutButton.addEventListener('click', function () {
+            logoutPopup.style.display = 'flex'; // Show the popup
+        });
+
+        // Add click event listeners to the popup buttons
+        cancelButton.addEventListener('click', function () {
+            logoutPopup.style.display = 'none'; // Hide the popup on cancel
+        });
+
+        confirmButton.addEventListener('click', function () {
+            logout(); // Call the logout function on confirm
+            logoutPopup.style.display = 'none'; // Hide the popup after logout
+        });
+
+        // Function to log out the user
+        function logout() {
+            try {
+                firebase.auth().signOut().then(function () {
+                    // Sign-out successful, redirect to the login page
+                    window.location.href = '../index.html';
+                }).catch(function (error) {
+                    // Handle sign-out error
+                    console.error('Logout error:', error);
+                });
+            } catch (error) {
+                console.error('Logout error (try-catch):', error);
+            }
+        }
+        getUserTransactions(); // Add this line
+
     });
 
-
-
-
 </script>
+
+</body>
+
 </html>
