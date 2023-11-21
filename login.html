@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Page Title</title>
+    <style>
+        @font-face {
+            font-family: 'Nothing';
+            src: url('./nothing-font.ttf') format('truetype'),
+                url('./nothing-font.otf') format('opentype');
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            position: relative;
+            color: white;
+            overflow: hidden; /* to hide background image overflow */
+        }
+
+        .text-container {
+            position: absolute;
+            top: 10%;
+            text-align: center;
+            font-family: 'nothing';
+            color: black;
+            font-size: x-large;
+        }
+
+        button {
+            background-color: white;
+            color: black;
+            padding: 10px 140px;
+            border: none;
+            border-radius: 16px;
+            margin-bottom: 120px;
+            cursor: pointer;
+            font-family: "Integral CF";
+        }
+
+        .highlighted-text {
+            color: #EEFF00;
+        }
+
+        .split {
+            position: absolute;
+            top: 13%;
+            text-align: center;
+            right: 35%;
+            font-family: 'nothing';
+            color: black;
+            font-size: large;
+        }
+
+        /* Hide on Desktop */
+        @media (min-width: 600px) {
+            body::before {
+                content: "Please open on a mobile device.";
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                text-align: center;
+                color: rgb(0, 0, 0);
+                font-family: 'Integral CF';
+                font-size: 1.5em;
+                z-index: 999;
+            }
+
+            .text-container,
+            .split,
+            button {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        // Array of background images
+        var bgImages = ['./bg.jpg', './bg1.jpg', './bg2.jpg'];
+
+        // Randomly select a background image
+        var randomBg = bgImages[Math.floor(Math.random() * bgImages.length)];
+
+        // Apply the random background image to the body
+        document.body.style.background = 'url(' + randomBg + ') center/cover no-repeat';
+    </script>
+
+    <div class="text-container">
+        <div class="text-4xl font-extrabold mb-6">Ku<span class="highlighted-text">DicK</span>Ka</div>
+    </div>
+    <div class="split">split</div>
+
+    <button>Let’s Go 🤑</button>
+</body>
+
+</html>
